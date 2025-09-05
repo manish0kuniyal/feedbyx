@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+:root {
+  --white: #cdd2ca;
+  --blue: #008080;
+  --lightblue:#5eabab;
+  --darker: #101210;
+  --dark: #18191A;
+}

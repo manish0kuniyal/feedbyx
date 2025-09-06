@@ -4,7 +4,7 @@ import FeedbackList from './FeedbackList';
 export default function FeedbackModal({ formId, feedbacks, onClose }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto relative">
+      <div className="bg-black border-2 rounded-xl shadow-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto relative">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-600 hover:text-black"

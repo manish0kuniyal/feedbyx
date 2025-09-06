@@ -4,6 +4,9 @@ const feedbackSchema = new mongoose.Schema({
   formId: {
     type: String,
     required: true,
+  },  formName: {       // <--- add this
+    type: String,
+    required: true,
   },
   responses: {
     type: Map,

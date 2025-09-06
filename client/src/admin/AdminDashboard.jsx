@@ -21,30 +21,33 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.uid) {
-      fetchFeedbacks(user.uid);
+    console.log(user,"oppppppppp")
+    if (user?.userId) {
+      fetchFeedbacks(user.userId);
     }
-  }, [user?.uid]);
+  }, [user?.userId]);
 
   const fetchFeedbacks = async (uid) => {
-    try {
-      const response = await fetch(`/api/feedback?uid=${uid}`);
-      if (response.ok) {
-        const data = await response.json();
-        setGroupedFeedbacks(data.feedbacksByForm || {});
-      }
-    } catch (error) {
-      console.error('Error fetching feedbacks:', error);
-    } finally {
-      setLoading(false);
+  try {
+    const response = await fetch(`http://localhost:5000/api/feedback?uid=${uid}`);
+    if (response.ok) {
+      const data = await response.json();
+      console.log("[FEEDBACKS]", data);
+      setGroupedFeedbacks(data.feedbacksByForm || {});
     }
-  };
+  } catch (error) {
+    console.error("Error fetching feedbacks:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
 
     try {
-      const res = await fetch(`/api/feedback?query=${encodeURIComponent(searchQuery)}`);
+      const res = await fetch(`http://localhost:5000/api/feedback?query=${encodeURIComponent(searchQuery)}`);
       const data = await res.json();
 
       const allFeedbacks = Object.values(data.feedbacksByForm || {}).flat();
@@ -170,9 +173,20 @@ export default function AdminDashboard() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Object.entries(groupedFeedbacks).map(([formId, feedbacks]) => (
-            <FormCard key={formId} formId={formId} feedbacks={feedbacks} />
-          ))}
+         {Object.entries(groupedFeedbacks).map(([formId, feedbacks]) => {
+  // Extract the formName from the first feedback in this group
+  const formName = feedbacks[0]?.responses?.formName || "Untitled Form";
+
+  return (
+    <FormCard
+      key={formId}
+      formId={formId}
+      formName={formName}
+      feedbacks={feedbacks}
+    />
+  );
+})}
+
         </div>
       )}
     </div>

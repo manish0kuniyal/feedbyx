@@ -1,4 +1,3 @@
-'use client';
 import { useThemeStore } from '../utils/themestore';
 import { FaLink } from "react-icons/fa";
 import { ImEmbed2 } from "react-icons/im";

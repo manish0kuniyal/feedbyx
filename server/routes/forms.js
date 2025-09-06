@@ -34,4 +34,18 @@ router.get("/", async (req, res) => {
   return res.json({ forms: allForms });
 });
 
+// Get single form by customId
+router.get("/:customId", async (req, res) => {
+  try {
+    const form = await Form.findOne({ customId: req.params.customId });
+    if (!form) {
+      return res.status(404).json({ error: "Form not found" });
+    }
+    res.json(form);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 export default router;

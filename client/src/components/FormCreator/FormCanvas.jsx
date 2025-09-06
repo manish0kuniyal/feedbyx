@@ -16,6 +16,7 @@ import TextAreaField from './FormComponents/TextAreaField';
 import StarRatingField from './FormComponents/DropdownField';
 import RadioField from './FormComponents/RadioField';
 import EmailField from './FormComponents/EmailField';
+import { useUserStore } from '../../utils/userstore';
 
 const fieldOptions = [
   { type: 'input', label: 'Input Field', icon: <LuTextCursor className="inline mr-2" /> },
@@ -30,8 +31,9 @@ export default function SimpleFormBuilder() {
   const [fields, setFields] = useState([]);
   const [showFieldMenu, setShowFieldMenu] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
- const uid = 'demo-user'
+const user = useUserStore((state) => state.user);
+console.log(user,"okoko")
+ const uid = user?.userId || null
   const darkMode = useThemeStore((state) => state.darkMode);
 const updateOptions = (id, newOptions) => {
   setFields((prev) =>
@@ -89,7 +91,7 @@ const addField = (fieldType) => {
       setIsSaving(true);
       const formData = { name: formName, uid, fields };
 
-      const res = await fetch('/api/forms', {
+      const res = await fetch('http://localhost:5000/api/forms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

@@ -25,42 +25,43 @@ export default function FormView() {
     fetchForm();
   }, [formId]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!form) return;
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!form) return;
 
-    const formData = new FormData(e.target);
-    const payload = { formId };
+  const formData = new FormData(e.target);
+  const payload = { formId, formName: form.name }; // <-- Add formName here
 
-    form.fieldType?.forEach((field, index) => {
-      const key = field.label || `field-${index}`;
-      const value =
-        field.type === 'radio' || field.type === 'rating'
-          ? formData.get(`${field.type}-${index}`)
-          : formData.get(key);
-      if (value) payload[key] = value;
+  form.fieldType?.forEach((field, index) => {
+    const key = field.label || `field-${index}`;
+    const value =
+      field.type === 'radio' || field.type === 'rating'
+        ? formData.get(`${field.type}-${index}`)
+        : formData.get(key);
+    if (value) payload[key] = value;
+  });
+
+  try {
+    setIsSubmitting(true);
+    setSuccessMsg('');
+    const res = await fetch('http://localhost:5000/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ formId, formName: form.name, responses: payload }), // send formName
     });
 
-    try {
-      setIsSubmitting(true);
-      setSuccessMsg('');
-      const res = await fetch('http://localhost:5000/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ formId, responses: payload }),
-      });
+    if (!res.ok) throw new Error('Failed to submit feedback');
 
-      if (!res.ok) throw new Error('Failed to submit feedback');
+    setSuccessMsg('✅ Feedback submitted successfully!');
+    setShowForm(false);
+    e.target.reset();
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-      setSuccessMsg('✅ Feedback submitted successfully!');
-      setShowForm(false);
-      e.target.reset();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   if (error) return <div className="p-6 text-red-400">{error}</div>;
   if (!form) return <div className="p-6 text-gray-300">Loading...</div>;

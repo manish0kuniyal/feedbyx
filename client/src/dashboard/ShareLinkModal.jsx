@@ -6,12 +6,18 @@ export default function ShareLinkModal({ form, onClose }) {
 
   if (!form) return null;
 
-  const link = `${process.env.NEXT_PUBLIC_BASE_URL}/forms/${form.customId}`;
+  const baseUrl = import.meta.env.VITE_CLIENT_URL || window.location.origin;
+  const link = `${baseUrl}/forms/${form.customId}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(link);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+
+    // Automatically close the modal after copy
+    setTimeout(() => {
+      setCopied(false);
+      onClose();
+    }, 700);
   };
 
   return (
@@ -34,13 +40,6 @@ export default function ShareLinkModal({ form, onClose }) {
             {copied ? "Copied!" : "Copy"}
           </button>
         </div>
-
-        <button
-          onClick={onClose}
-          className="mt-4 w-full py-2 rounded bg-gray-700 hover:bg-gray-600 text-gray-200 transition"
-        >
-          Close
-        </button>
       </div>
     </div>
   );

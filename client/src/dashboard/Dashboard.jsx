@@ -68,7 +68,7 @@ useEffect(() => {
 
   const fetchForms = async (uid) => {
     try {
-      const res = await fetch(`/api/forms?uid=${uid}`);
+      const res = await fetch(`http://localhost:5000/api/forms?uid=${uid}`);
       const data = await res.json();
       setForms(data.forms || []);
     } catch (err) {

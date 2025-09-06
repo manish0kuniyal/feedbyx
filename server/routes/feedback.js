@@ -6,13 +6,13 @@ const router = express.Router();
 
 // Save feedback
 router.post("/", async (req, res) => {
-  const { formId, responses } = req.body;
+  const { formId,formName, responses } = req.body;
 
-  if (!formId || !responses) {
+  if ( !formName || !formId || !responses) {
     return res.status(400).json({ success: false, error: "formId and responses are required" });
   }
 
-  const newFeedback = await Feedback.create({ formId, responses });
+  const newFeedback = await Feedback.create({ formId, formName,responses });
 
   return res.status(201).json({ success: true, data: newFeedback });
 });

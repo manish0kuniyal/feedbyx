@@ -3,12 +3,25 @@
 import { FiLogOut } from 'react-icons/fi';
 import { FaArrowTrendUp } from "react-icons/fa6";
 import { MdDarkMode, MdLightMode } from "react-icons/md";
-import { signOut } from 'next-auth/react';
+import axios from 'axios';
 import { useThemeStore } from '../utils/themestore';
+import { useNavigate } from 'react-router-dom';
 
-export default function Header({ user }) {
+export default function Header({ user, setUser }) {
   const darkMode = useThemeStore((state) => state.darkMode);
   const toggleDarkMode = useThemeStore((state) => state.toggleDarkMode);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+  try {
+    await axios.post('http://localhost:5000/api/auth/logout', {}, { withCredentials: true });
+    setUser(null);             // clear frontend user state
+    window.location.href = '/'; // force redirect to home
+  } catch (err) {
+    console.error('Logout failed:', err);
+  }
+};
+
 
   return (
     <div className="flex justify-between items-center gap-4 mb-6 pb-4">
@@ -18,7 +31,7 @@ export default function Header({ user }) {
 
       <div className="flex items-center gap-4">
         <button
-          onClick={() => window.location.href = '/admin'}
+          onClick={() => navigate('/admin')}
           className="flex p-1 px-2 rounded bg-[#9ACD32] items-center gap-2 font-bold hover:text-gray-200 transition"
         >
           Dashboard
@@ -34,7 +47,7 @@ export default function Header({ user }) {
         </button>
 
         <button
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={handleLogout}
           className="flex items-center gap-2 font-bold hover:text-[#9ACD32] transition"
         >
           Logout

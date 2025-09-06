@@ -1,29 +1,43 @@
-// client/src/components/GoogleSignInButton.jsx
 import { GoogleLogin } from "@react-oauth/google";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-export default function GoogleSignInButton({ onLogin }) {
-  return (
-    <GoogleLogin
-      onSuccess={async (credentialResponse) => {
-        try {
-          const token = credentialResponse.credential; // JWT token from Google
-          
-          // Send token to backend to verify / create user
-          const res = await axios.post(
-            "http://localhost:5000/api/auth/google/token",
-            { token },
-            { withCredentials: true } // so backend can set cookie
-          );
+export default function GoogleSignInButton() {
+  const navigate = useNavigate();
 
-          onLogin(res.data.user); // update frontend state
-        } catch (err) {
-          console.error(err);
-        }
-      }}
-      onError={() => {
-        console.log("Login Failed");
-      }}
-    />
-  );
+  const handleLogin = async (credentialResponse) => {
+    try {
+      const token = credentialResponse?.credential;
+      if (!token) throw new Error("No credential token received");
+
+      // Send token to backend and set cookie
+      await axios.post(
+        "http://localhost:5000/api/auth/google/token",
+        { token },
+        { withCredentials: true }
+      );
+
+      // Fetch current user to confirm login
+      const meRes = await axios.get("http://localhost:5000/api/auth/me", {
+        withCredentials: true,
+      });
+
+      if (meRes.data.user) {
+        // User exists → redirect to dashboard
+        navigate("/dashboard");
+      } else {
+        console.error("User not authenticated yet");
+      }
+    } catch (err) {
+      console.error("Login failed:", err);
+    }
+  };
+return (
+  <GoogleLogin
+    onSuccess={handleLogin}
+    onError={() => console.log("Login Failed")}
+    prompt="select_account" // ✅ forces account selection
+  />
+);
+
 }

@@ -5,10 +5,12 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router(); // <-- add this
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 router.post("/google/token", async (req, res) => {
-  const { token } = req.body;
+  const token = req.body?.token;
+  if (!token) return res.status(400).json({ message: "Token not provided" });
+
   try {
     const ticket = await client.verifyIdToken({
       idToken: token,
@@ -28,7 +30,7 @@ router.post("/google/token", async (req, res) => {
       });
     }
 
-    const jwtToken = jwt.sign({ uid: user.userId }, process.env.JWT_SECRET, {
+    const jwtToken = jwt.sign({ uid: user.userId }, process.env.JWT_SECRET || "123jwt", {
       expiresIn: "7d",
     });
 
@@ -45,5 +47,36 @@ router.post("/google/token", async (req, res) => {
     res.status(401).send("Invalid Google token");
   }
 });
+
+
+// ✅ Get current logged in user
+router.get("/me", async (req, res) => {
+  const token = req.cookies.token;
+  if (!token) return res.status(401).json({ message: "Not authenticated" });
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "123jwt");
+    const user = await User.findOne({ userId: decoded.uid }).select("-__v");
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ user });
+  } catch (err) {
+    console.error("JWT verify error:", err);
+    res.status(401).json({ message: "Invalid token" });
+  }
+});
+
+// ✅ Logout (clear cookie)
+router.post("/logout", (req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
+  res.json({ message: "Logged out" });
+});
+
+
 
 export default router; // <-- export it

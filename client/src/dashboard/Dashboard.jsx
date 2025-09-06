@@ -1,12 +1,13 @@
-'use client';
+
 
 import { useState, useEffect } from 'react';
+import {useNavigate} from "react-router-dom"
 import { FaPlus } from 'react-icons/fa6';
 import { MdDarkMode, MdLightMode, MdOutlineAutoGraph } from 'react-icons/md';
 import { FiLogOut } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SiFormspree } from "react-icons/si";
-import SimpleFormBuilder from "../components/FormCreator/FormCanvas"
+import SimpleFormBuilder from "../components/FormCreator/FormCanvas";
 import FeedbackGrid from './FeedbackGrid';
 import Modal from './Modal';
 import AdminDashboard from '../admin/AdminDashboard';
@@ -17,27 +18,47 @@ import ShareLinkModal from './ShareLinkModal';
 export default function Dashboard() {
   const setUser = useUserStore((state) => state.setUser);
   const user = useUserStore((state) => state.user);
+  const router = useNavigate();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [forms, setForms] = useState([]);
   const [formName, setFormName] = useState('');
   const [embedForm, setEmbedForm] = useState(null);
-  const [view, setView] = useState('create'); // 'create' | 'view' | 'admin'
+  const [view, setView] = useState('create');
   const [shareForm, setShareForm] = useState(null);
-  const [currentForm, setCurrentForm] = useState(null); 
-
+  const [currentForm, setCurrentForm] = useState(null);
   const darkMode = useThemeStore((state) => state.darkMode);
   const toggleDarkMode = useThemeStore((state) => state.toggleDarkMode);
+useEffect(() => {
+  if (!user) {
+    router("/"); // redirect immediately after logout
+  }
+}, [user, router]);
 
-  // Mock user for now
-  useEffect(() => {
-    setUser({
-      name: 'Demo User',
-      email: 'demo@example.com',
-      uid: 'demo123',
-      image: null,
-    });
-  }, [setUser]);
+useEffect(() => {
+  const fetchUser = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/me", {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        router("/");
+        return;
+      }
+
+      const data = await res.json();
+      setUser(data.user);
+    } catch (err) {
+      console.error("Auth check failed:", err);
+      router("/");
+    } 
+  };
+
+  fetchUser();
+}, [setUser, router]);
+
+
 
   const handleCreateForm = () => {
     if (!formName.trim()) return;
@@ -56,8 +77,18 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (user?.uid && view === 'view') fetchForms(user.uid);
-  }, [user?.uid, view]);
+    if (user?.userId && view === 'view') fetchForms(user.userId);
+  }, [user?.userId, view]);
+
+  // ✅ Logout
+  const handleLogout = async () => {
+    await fetch("http://localhost:5000/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
+    setUser(null);
+    navigate("/"); 
+  };
 
   const containerClasses = darkMode
     ? 'flex h-screen bg-gray-900 text-gray-100 transition-colors duration-300'
@@ -81,7 +112,7 @@ export default function Dashboard() {
     },
     {
       label: 'Logout',
-      onClick: () => console.log('Logout clicked'), // placeholder
+      onClick: handleLogout,
       icon: <FiLogOut />,
       fontBold: true,
     },
@@ -163,7 +194,7 @@ export default function Dashboard() {
             <FeedbackGrid
               forms={forms}
               setEmbedForm={setEmbedForm}
-              setShareForm={setShareForm} 
+              setShareForm={setShareForm}
             />
             <ShareLinkModal
               form={shareForm}

@@ -66,7 +66,7 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className={`max-w-6xl mx-auto p-6 transition-colors ${darkMode ? ' text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
+    <div className={`max-w-6xl mx-auto p-6 transition-colors ${darkMode ? ' text-gray-100' : ' text-gray-900'}`}>
       {/* Top Bar */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-[var(--blue)]">Feedback Dashboard</h1>
@@ -164,7 +164,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Feedback Cards */}
-      {loading ? (
+      {/* {loading ? (
         <div className="text-center text-gray-600">Loading...</div>
       ) : totalForms === 0 ? (
         <div className="text-center py-12">
@@ -188,7 +188,7 @@ export default function AdminDashboard() {
 })}
 
         </div>
-      )}
+      )} */}
     </div>
   );
 }

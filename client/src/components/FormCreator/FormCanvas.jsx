@@ -132,7 +132,7 @@ const addField = (fieldType) => {
 
 
   return (
-    <div className={`max-w-6xl mx-auto p-6  p-6 min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#101210] text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
+    <div className={`max-w-6xl mx-auto p-6  p-6 min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#101210] text-gray-100' : ' text-gray-900'}`}>
       
       <div className="mb-6 ">
         <h2 className={`text-xl font-semibold mb-2 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>

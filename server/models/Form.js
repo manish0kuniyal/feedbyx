@@ -1,24 +1,3 @@
-// import mongoose from 'mongoose';
-
-// const formSchema = new mongoose.Schema({
-//   name: {
-//     type: String,
-//     required: true
-//   },
-//   customId: {
-//     type: String, // this stores your `Date.now().toString()`
-//     unique: true,
-//     required: true
-//   },
-//   userId: {
-//     type: String,
-//     required: true, // comes from logged-in user
-//   },
-//   createdAt: {
-//     type: Date,
-//     default: Date.now
-//   }
-// });
 
 // export default mongoose.models.Form || mongoose.model('Form', formSchema);
 import mongoose from 'mongoose';

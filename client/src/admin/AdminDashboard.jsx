@@ -95,7 +95,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Search */}
-        <div className={`flex items-center rounded-lg p-2 min-w-[250px] flex-1 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        {/* <div className={`flex items-center rounded-lg p-2 min-w-[250px] flex-1 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
           <input
             type="text"
             placeholder="Search by name or email"
@@ -112,7 +112,7 @@ export default function AdminDashboard() {
           >
             <FiSearch className={`${darkMode ? 'text-gray-900' : 'text-gray-700'}`} />
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* Modal */}

@@ -21,6 +21,7 @@ export default function Dashboard() {
   const user = useUserStore((state) => state.user);
   const router = useNavigate();
 
+const [loadingResponses, setLoadingResponses] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
   const [forms, setForms] = useState([]);
   const [formName, setFormName] = useState('');
@@ -102,6 +103,33 @@ const [groupedFeedbacks, setGroupedFeedbacks] = useState({});
     setUser(null);
     router("/");
   };
+
+// add this helper inside Dashboard
+const fetchFeedbacks = async (uid) => {
+  if (!uid) return;
+  setLoadingResponses(true);
+  try {
+    const res = await fetch(`http://localhost:5000/api/feedback?uid=${uid}`);
+    if (!res.ok) {
+      console.error('Failed to fetch feedbacks:', res.statusText);
+      setGroupedFeedbacks({});
+      return;
+    }
+    const data = await res.json();
+    // Assuming API returns { feedbacksByForm: { [formId]: [{...}, ...] } }
+    setGroupedFeedbacks(data.feedbacksByForm || {});
+  } catch (err) {
+    console.error('Error fetching feedbacks:', err);
+    setGroupedFeedbacks({});
+  } finally {
+    setLoadingResponses(false);
+  }
+};useEffect(() => {
+  if (view === 'responses' && user?.userId) {
+    fetchFeedbacks(user.userId);
+  }
+}, [view, user?.userId]);
+
 
   const containerClasses = darkMode
     ? 'flex h-screen bg-[var(--darkest)] text-gray-100 transition-colors duration-300 p-4 gap-4 relative'
@@ -235,20 +263,25 @@ const topButtons = [
         )}
         
        
-  {view === 'responses' && (
-    <>
-      <FeedbackCards
-        forms={forms}                // or fetch responses if needed
-        setEmbedForm={setEmbedForm}
-        setShareForm={setShareForm}
-      />
-      <ShareLinkModal
-        form={shareForm}
-        onClose={() => setShareForm(null)}
-      />
-    </>
-  )}
- 
+ {view === 'responses' && (
+  <>
+    <FeedbackCards
+      groupedFeedbacks={groupedFeedbacks}
+      // optionally pass callbacks if you want modals/actions from cards:
+      setEmbedForm={setEmbedForm}
+      setShareForm={setShareForm}
+    />
+    <ShareLinkModal
+      form={shareForm}
+      onClose={() => setShareForm(null)}
+    />
+    {/* Optionally show a loader */}
+    {loadingResponses && (
+      <div className="text-center py-6">Loading responses...</div>
+    )}
+  </>
+)}
+
 
 
         {view === 'admin' && <AdminDashboard />}

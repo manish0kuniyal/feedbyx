@@ -267,15 +267,13 @@ const topButtons = [
   <>
     <FeedbackCards
       groupedFeedbacks={groupedFeedbacks}
-      // optionally pass callbacks if you want modals/actions from cards:
-      setEmbedForm={setEmbedForm}
+     setEmbedForm={setEmbedForm}
       setShareForm={setShareForm}
     />
     <ShareLinkModal
       form={shareForm}
       onClose={() => setShareForm(null)}
     />
-    {/* Optionally show a loader */}
     {loadingResponses && (
       <div className="text-center py-6">Loading responses...</div>
     )}

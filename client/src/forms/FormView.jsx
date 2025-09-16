@@ -1,3 +1,4 @@
+// src/views/FormView.jsx
 'use client';
 
 import { useParams } from 'react-router-dom';
@@ -16,6 +17,16 @@ export default function FormView() {
   const [fieldValidity, setFieldValidity] = useState({});
   const [formValid, setFormValid] = useState(false);
 
+  // ---------- METADATA state ----------
+  const [metadata, setMetadata] = useState({
+    utm: {},          // will hold utm_* and related params
+    referrer: '',
+    pageUrl: '',
+    userAgent: '',
+    location: null,   // { lat, lng, accuracy } if allowed
+    clientTs: null    // optional client timestamp
+  });
+
   // fetch form
   useEffect(() => {
     if (!formId) return;
@@ -31,6 +42,49 @@ export default function FormView() {
       }
     })();
   }, [formId]);
+
+  // parse URL params, get referrer, userAgent, pageUrl and attempt geolocation
+  useEffect(() => {
+    // parse URLSearchParams
+    const params = new URLSearchParams(window.location.search);
+    const utm = {};
+    for (const [k, v] of params.entries()) {
+      if (k.startsWith('utm_') || ['source', 'campaign', 'gclid', 'fbclid', 'ref'].includes(k)) {
+        utm[k] = v;
+      }
+    }
+
+    const initialMeta = {
+      utm,
+      referrer: document.referrer || '',
+      pageUrl: window.location.href,
+      userAgent: navigator.userAgent || '',
+      location: null,
+      clientTs: new Date().toISOString()
+    };
+
+    setMetadata(initialMeta);
+
+    // attempt browser geolocation (asks permission)
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setMetadata((prev) => ({
+            ...prev,
+            location: {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+              accuracy: pos.coords.accuracy
+            }
+          }));
+        },
+        (err) => {
+          // ignore failure; keep location null
+        },
+        { maximumAge: 1000 * 60 * 5, timeout: 5000 }
+      );
+    }
+  }, []); // run once on mount
 
   // sanitize + validate
   const sanitizeInput = (value, { maxLen = 2000 } = {}) => {
@@ -67,26 +121,27 @@ export default function FormView() {
   };
 
   // recompute validity
-useEffect(() => {
-  if (!form?.fieldType) {
-    setFieldValidity({});
-    setFormValid(false);
-    return;
-  }
+  useEffect(() => {
+    if (!form?.fieldType) {
+      setFieldValidity({});
+      setFormValid(false);
+      return;
+    }
 
-  const next = {};
-  let allOk = true;
+    const next = {};
+    let allOk = true;
 
-  form.fieldType.forEach((f, i) => {
-    const res = validateField(f, i);
-    const key = f.label || `field-${i}`;
-    next[key] = res;
-    if (!res.ok) allOk = false;
-  });
+    form.fieldType.forEach((f, i) => {
+      const res = validateField(f, i);
+      const key = f.label || `field-${i}`;
+      next[key] = res;
+      if (!res.ok) allOk = false;
+    });
 
-  setFieldValidity(next);
-  setFormValid(Boolean(allOk)); // explicit boolean
-}, [values, ratings, form]);
+    setFieldValidity(next);
+    setFormValid(Boolean(allOk));
+  }, [values, ratings, form]);
+
   const handleChange = (field, index) => (e) => {
     const key = field.label || `field-${index}`;
     setValues((prev) => ({ ...prev, [key]: sanitizeInput(e.target.value) }));
@@ -96,67 +151,66 @@ useEffect(() => {
     const key = field.label || `field-${index}`;
     setValues((prev) => ({ ...prev, [key]: e.target.value }));
   };
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  if (!form) return;
 
-  // FINAL synchronous validation before submit
-  const nextValidity = {};
-  let ok = true;
-  const payload = { formId, formName: form.name, responses: {} };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!form) return;
 
-  (form.fieldType || []).forEach((f, i) => {
-    const key = f.label || `field-${i}`;
-    const res = validateField(f, i);
-    nextValidity[key] = res;
-    if (!res.ok) ok = false;
+    // FINAL synchronous validation before submit
+    const nextValidity = {};
+    let ok = true;
+    // include metadata in payload
+    const payload = { formId, formName: form.name, responses: {}, metadata };
 
-    // collect normalized values when valid
-    if (res.ok) {
-      if ((f.type || '').toLowerCase() === 'rating') {
-        payload.responses[key] = Number(ratings[i] ?? null);
-      } else {
-        payload.responses[key] = res.normalizedValue ?? (values[key] ?? '');
+    (form.fieldType || []).forEach((f, i) => {
+      const key = f.label || `field-${i}`;
+      const res = validateField(f, i);
+      nextValidity[key] = res;
+      if (!res.ok) ok = false;
+
+      // collect normalized values when valid
+      if (res.ok) {
+        if ((f.type || '').toLowerCase() === 'rating') {
+          payload.responses[key] = Number(ratings[i] ?? null);
+        } else {
+          payload.responses[key] = res.normalizedValue ?? (values[key] ?? '');
+        }
       }
-    }
-  });
-
-  // update UI validity state
-  setFieldValidity((prev) => ({ ...prev, ...nextValidity }));
-  setFormValid(ok);
-
-  if (!ok) {
-    setError('Please fix validation errors before submitting.');
-    // focus first invalid field (optional enhancement)
-    return;
-  }
-
-  // submit
-  try {
-    setIsSubmitting(true);
-    const res = await fetch('http://localhost:5000/api/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
     });
 
-    if (!res.ok) {
-      const text = await res.text().catch(() => null);
-      throw new Error(text || 'Submission failed');
+    setFieldValidity((prev) => ({ ...prev, ...nextValidity }));
+    setFormValid(ok);
+
+    if (!ok) {
+      setError('Please fix validation errors before submitting.');
+      return;
     }
 
-    setSuccessMsg('✅ Feedback submitted successfully!');
-    setShowForm(false);
-    setValues({});
-    setRatings({});
-  } catch (err) {
-    setError(err.message || 'Submission error');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    // submit
+    try {
+      setIsSubmitting(true);
+      const res = await fetch('http://localhost:5000/api/feedback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
 
+      if (!res.ok) {
+        const text = await res.text().catch(() => null);
+        throw new Error(text || 'Submission failed');
+      }
+
+      setSuccessMsg('✅ Feedback submitted successfully!');
+      setShowForm(false);
+      setValues({});
+      setRatings({});
+    } catch (err) {
+      setError(err.message || 'Submission error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (error) return <div className="p-6 text-red-400">{error}</div>;
   if (!form) return <div className="p-6 text-gray-300">Loading...</div>;
@@ -164,7 +218,6 @@ const handleSubmit = async (e) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4">
       <div className="bg-gray-800 rounded-2xl shadow-lg p-6 w-full max-w-xl text-gray-100 relative">
-        {/* Watermark inside card */}
         <div className="flex items-center justify-center gap-2 mb-4 opacity-70">
           <img src="/logo.png" alt="Feedbyx" className="h-6 w-auto" />
           <span className="text-xs text-gray-300">

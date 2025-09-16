@@ -2,7 +2,26 @@
 
 import { motion } from 'framer-motion';
 import { useThemeStore } from '../utils/themestore';
-
+export function toPlainObject(maybeMap) {
+  if (!maybeMap) return {};
+  // if it's already an object
+  if (typeof maybeMap === 'object' && !Array.isArray(maybeMap)) {
+    // Mongoose lean() sometimes returns plain object, sometimes array entries; handle common cases
+    if (maybeMap instanceof Map) {
+      return Object.fromEntries(maybeMap);
+    }
+    // if it's an array of entries: [ [k,v], [k2,v2] ]
+    if (Array.isArray(maybeMap)) {
+      try {
+        return Object.fromEntries(maybeMap);
+      } catch {
+        return maybeMap;
+      }
+    }
+    return maybeMap;
+  }
+  return {};
+}
 export default function FeedbackList({ feedbacks }) {
   const darkMode = useThemeStore((s) => s.darkMode);
 

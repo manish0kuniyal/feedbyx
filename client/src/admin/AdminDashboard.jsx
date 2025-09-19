@@ -21,27 +21,26 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log(user,"oppppppppp")
     if (user?.userId) {
       fetchFeedbacks(user.userId);
     }
   }, [user?.userId]);
 
   const fetchFeedbacks = async (uid) => {
-  try {
-    const response = await fetch(`http://localhost:5000/api/feedback?uid=${uid}`);
-    if (response.ok) {
-      const data = await response.json();
-      console.log("[FEEDBACKS]", data);
-      setGroupedFeedbacks(data.feedbacksByForm || {});
+    try {
+      const response = await fetch(`http://localhost:5000/api/feedback?uid=${uid}`);
+      if (response.ok) {
+        const data = await response.json();
+        setGroupedFeedbacks(data.feedbacksByForm || {});
+      } else {
+        console.error('fetchFeedbacks failed', response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching feedbacks:", error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Error fetching feedbacks:", error);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -72,7 +71,7 @@ export default function AdminDashboard() {
         <h1 className="text-3xl font-bold text-[var(--blue)]">Feedback Dashboard</h1>
         <div className="flex gap-3">
           <button
-            onClick={fetchFeedbacks}
+            onClick={() => fetchFeedbacks(user?.userId)}
             className={`flex items-center gap-2 font-bold px-4 py-2 rounded hover:opacity-90 transition
               ${darkMode ? 'bg-[var(--lightblue)] text-gray-900' : 'bg-[var(--blue)] text-black'}
             `}
@@ -93,26 +92,6 @@ export default function AdminDashboard() {
           Export
           <ExportCSVButton data={groupedFeedbacks} />
         </div>
-
-        {/* Search */}
-        {/* <div className={`flex items-center rounded-lg p-2 min-w-[250px] flex-1 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <input
-            type="text"
-            placeholder="Search by name or email"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={`w-full outline-none text-sm pr-2 border-b-2 p-2 mr-4 ${darkMode ? 'bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-400' : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'}`}
-          />
-          <button
-            onClick={handleSearch}
-            className={`w-12 h-9 flex items-center justify-center rounded hover:opacity-90 transition
-              ${darkMode ? 'bg-[var(--lightblue)]' : 'bg-[var(--blue)]'}
-            `}
-            title="Search"
-          >
-            <FiSearch className={`${darkMode ? 'text-gray-900' : 'text-gray-700'}`} />
-          </button>
-        </div> */}
       </div>
 
       {/* Modal */}
@@ -133,25 +112,81 @@ export default function AdminDashboard() {
             ) : (
               <div className="space-y-4">
                 {searchResults.map((fb, idx) => (
-                  <div
-                    key={idx}
-                    className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-50 text-gray-800'}`}
-                  >
-                    <div className="flex justify-between">
-                      <div>
-                        <p className="font-semibold">{fb.name}</p>
-                        <p className="text-sm opacity-75">{fb.email}</p>
-                      </div>
-                      <p className="text-yellow-500">
-                        {'★'.repeat(fb.rating)}{'☆'.repeat(5 - fb.rating)}
-                      </p>
-                    </div>
-                    <p className="mt-2">{fb.feedback}</p>
-                    <p className="text-xs opacity-60 text-right">
-                      {new Date(fb.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                ))}
+  <div
+    key={idx}
+    className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800 text-gray-200' : 'bg-gray-50 text-gray-800'}`}
+  >
+    <div className="flex justify-between">
+      <div>
+        <p className="font-semibold">{fb.responses?.Name || fb.responses?.name || 'Unknown'}</p>
+        <p className="text-sm opacity-75">{fb.responses?.email || fb.responses?.Email || ''}</p>
+      </div>
+      <p className="text-yellow-500">
+        {'★'.repeat(fb.responses?.['service review'] || fb.rating || 0)}{'☆'.repeat(5 - (fb.responses?.['service review'] || fb.rating || 0))}
+      </p>
+    </div>
+
+    <p className="mt-2">{fb.responses?.['Your message'] || fb.responses?.message || fb.feedback || ''}</p>
+
+    {/* Metadata section */}
+    <div className="mt-3 text-xs text-gray-400 border-t pt-2">
+      <div><strong>IP:</strong> {fb.clientIp || 'N/A'}</div>
+
+      <div>
+        <strong>Location:</strong>{' '}
+        {fb.metadata?.locationGeo?.label || fb.metadata?.locationLabel ? (
+          <>
+            {fb.metadata?.locationGeo?.label || fb.metadata?.locationLabel}
+            {fb.metadata?.location && typeof fb.metadata.location.lat === 'number' && (
+              <>
+                {' • '}
+                <span className="text-xs opacity-70">{`${fb.metadata.location.lat.toFixed(6)}, ${fb.metadata.location.lng.toFixed(6)}`}</span>
+                {' • '}
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fb.metadata.location.lat + ',' + fb.metadata.location.lng)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline"
+                >
+                  view
+                </a>
+              </>
+            )}
+          </>
+        ) : fb.metadata?.location && typeof fb.metadata.location.lat === 'number' ? (
+          <>
+            {`${fb.metadata.location.lat.toFixed(6)}, ${fb.metadata.location.lng.toFixed(6)}`}
+            {fb.metadata.location.accuracy ? ` (±${Math.round(fb.metadata.location.accuracy)}m)` : ''}
+            {' • '}
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(fb.metadata.location.lat + ',' + fb.metadata.location.lng)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="underline"
+            >
+              view
+            </a>
+          </>
+        ) : (
+          'N/A'
+        )}
+      </div>
+
+      <div><strong>Page URL:</strong> <span className="truncate block max-w-md">{fb.metadata?.pageUrl || 'N/A'}</span></div>
+      <div><strong>User Agent:</strong> <span className="truncate block max-w-md">{fb.metadata?.userAgent || 'N/A'}</span></div>
+      <div><strong>Referrer:</strong> {fb.metadata?.referrer || 'N/A'}</div>
+
+      {fb.metadata?.utm && Object.keys(fb.metadata.utm).length > 0 && (
+        <div><strong>UTM:</strong> {JSON.stringify(fb.metadata.utm)}</div>
+      )}
+    </div>
+
+    <p className="text-xs opacity-60 text-right mt-2">
+      {new Date(fb.createdAt).toLocaleString()}
+    </p>
+  </div>
+))}
+
               </div>
             )}
           </div>
@@ -162,33 +197,6 @@ export default function AdminDashboard() {
       {!loading && totalForms > 0 && (
         <FormStats groupedFeedbacks={groupedFeedbacks} />
       )}
-
-      {/* Feedback Cards */}
-      {/* {loading ? (
-        <div className="text-center text-gray-600">Loading...</div>
-      ) : totalForms === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-500 text-lg">No feedback submissions yet</p>
-          <p className="text-gray-400 mt-2">They will appear here once users submit feedback.</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-         {Object.entries(groupedFeedbacks).map(([formId, feedbacks]) => {
-  // Extract the formName from the first feedback in this group
-  const formName = feedbacks[0]?.responses?.formName || "Untitled Form";
-
-  return (
-    <FormCard
-      key={formId}
-      formId={formId}
-      formName={formName}
-      feedbacks={feedbacks}
-    />
-  );
-})}
-
-        </div>
-      )} */}
     </div>
   );
 }

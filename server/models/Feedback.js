@@ -1,3 +1,4 @@
+// models/Feedback.js
 import mongoose from "mongoose";
 
 const feedbackSchema = new mongoose.Schema({
@@ -17,10 +18,33 @@ const feedbackSchema = new mongoose.Schema({
     referrer: { type: String, default: "" },     // document.referrer
     pageUrl: { type: String, default: "" },      // window.location.href
     userAgent: { type: String, default: "" },    // navigator.userAgent
+
+    // raw coords client sent (if any)
     location: {
       lat: { type: Number },
       lng: { type: Number },
       accuracy: { type: Number },
+    },
+
+    // human-readable label for the coords (reverse-geocoded)
+    locationLabel: { type: String, default: "" },
+
+    // structured reverse-geocode result (your "locaitron" object)
+    locationGeo: {
+      city: { type: String, default: null },
+      region: { type: String, default: null },
+      country: { type: String, default: null },
+      label: { type: String, default: "" },
+      lat: { type: Number, default: null }, // repeated for convenience / query
+      lon: { type: Number, default: null },
+    },
+
+    // server-side ip lookup
+    ipGeo: {
+      city: { type: String, default: null },
+      region: { type: String, default: null },
+      country: { type: String, default: null },
+      label: { type: String, default: "" }
     },
   },
 

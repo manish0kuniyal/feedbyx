@@ -33,6 +33,9 @@ await connectDB();
 app.get("/",(req,res)=>{
   return res.json({"ok":"OK"})
 })
+app.post("/check",(req,res)=>{
+  return res.json({"POST":"OK"})
+})
 app.use("/api/auth", authRouter);
 app.use("/api/feedback", feedbackRouter);
 app.use("/api/forms", formsRouter);
@@ -44,4 +47,5 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error("DB error:", err));
 
 
-  app.listen(5000, () => console.log("Server running on http://localhost:5000"));
+  // app.listen(5000, () => console.log("Server running on http://localhost:5000"));
+export default app

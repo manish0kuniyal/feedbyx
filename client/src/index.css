@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+:root {
+  --white: #cdd2ca;
+  --blue: #008080;
+  --lightblue:#5eabab;
+--dark: #1a1a1a;       /* base dark (cards, sidebars) */
+  --darker: #121212;     /* app background */
+  --darkest: #0a0a0a;    /* optional deepest layer */
+
+}

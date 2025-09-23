@@ -6,10 +6,10 @@ import app from "./server.js";
 const serverlessApp = serverless(app);
 
 export const handler = async (event, context) => {
-  // If API Gateway sends a prefixed path, strip it
-  if (event.rawPath && event.rawPath.startsWith("/lambda-gh-action")) {
-    event.rawPath = event.rawPath.replace("/lambda-gh-action", "") || "/";
-  }
+  // // If API Gateway sends a prefixed path, strip it
+  // if (event.rawPath && event.rawPath.startsWith("/lambda-gh-action")) {
+  //   event.rawPath = event.rawPath.replace("/lambda-gh-action", "") || "/";
+  // }
 
   return serverlessApp(event, context);
 };

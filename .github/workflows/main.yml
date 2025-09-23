@@ -15,18 +15,31 @@ jobs:
       - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: "22"   # match your Lambda runtime
+          node-version: "22"
 
       - name: Install zip
         run: sudo apt-get update && sudo apt-get install -y zip
 
-      - name: Install dependencies
-        run: npm ci   # installs node_modules at repo root
-
-      - name: Create deployment zip (include handler + code + node_modules)
+      # Install dependencies inside server/ (preferred: npm ci if package-lock.json exists)
+      - name: Install server dependencies
+        working-directory: server
         run: |
-          zip -r code.zip . \
-            -x "code.zip" "*.git*" "*.log" "node_modules/.cache/*" ".github/*"
+          if [ -f package-lock.json ]; then
+            npm ci --production
+          else
+            echo "package-lock.json not found in server/, using npm install --production as fallback"
+            npm install --production
+          fi
+
+      - name: Create deployment zip from server (includes handler + node_modules)
+        run: |
+          # make sure any previous zip is removed
+          rm -f code.zip
+          cd server
+          zip -r ../code.zip . -x "code.zip" "*.git*" "*.log" "node_modules/.cache/*" ".github/*"
+          cd ..
+          echo "ZIP created; size:"
+          ls -lh code.zip
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -44,7 +57,7 @@ jobs:
       - name: Wait for Lambda update to finish
         run: aws lambda wait function-updated --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}"
 
-      - name: Update Lambda environment variables (safe JSON)
+      - name: Update Lambda environment variables (safe JSON file)
         run: |
           cat > env.json <<EOF
           {"Variables": {
@@ -67,4 +80,5 @@ jobs:
             --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}" \
             --payload file://payload.json response.json \
             --cli-binary-format raw-in-base64-out --region us-east-1
+          echo "----- invoke output -----"
           cat response.json || true

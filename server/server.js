@@ -18,6 +18,25 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
+// DEBUG: log each incoming request (temporary) — put this immediately after express.json()
+app.use((req, res, next) => {
+  try {
+    console.log("➡️ INCOMING", {
+      method: req.method,
+      path: req.path,
+      headers: {
+        origin: req.headers?.origin,
+        host: req.headers?.host,
+        "content-type": req.headers?.["content-type"],
+      },
+      body: req.body,
+    });
+  } catch (e) {
+    console.warn("⚠️ request logger failed:", e && (e.stack || e));
+  }
+  next();
+});
+
 app.use(
   cors({
     origin: ["http://localhost:3000", "http://localhost:5173"],
@@ -48,8 +67,15 @@ app.use("/api/feedback", feedbackRouter);
 app.use("/api/forms", formsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/geo", geoRoutes);
+
+// DEBUG: global error handler (temporary) — must be after all routes
 app.use((err, req, res, next) => {
-  console.error("🔥 Unhandled error:", err && (err.stack || err));
+  try {
+    console.error("🔥 Unhandled error:", err && (err.stack || err));
+  } catch (e) {
+    console.error("🔥 Error while logging error:", e && (e.stack || e));
+  }
+  // return stack in body for debugging; remove this in production
   res.status(500).json({ error: String(err && (err.stack || err)) });
 });
 

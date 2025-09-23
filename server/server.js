@@ -48,5 +48,9 @@ app.use("/api/feedback", feedbackRouter);
 app.use("/api/forms", formsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/geo", geoRoutes);
+app.use((err, req, res, next) => {
+  console.error("🔥 Unhandled error:", err && (err.stack || err));
+  res.status(500).json({ error: String(err && (err.stack || err)) });
+});
 
 export default app;

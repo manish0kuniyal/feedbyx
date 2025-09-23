@@ -41,3 +41,9 @@ jobs:
           aws lambda update-function-code \
             --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}" \
             --zip-file fileb://code.zip
+
+      - name: Update Lambda environment variables
+        run: |
+          aws lambda update-function-configuration \
+            --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}" \
+            --environment "Variables={MONGO_URI=${{ secrets.MONGO_URI }},REDIS_HOST=${{ secrets.REDIS_HOST }},REDIS_PORT=${{ secrets.REDIS_PORT }},REDIS_USERNAME=${{ secrets.REDIS_USERNAME }},REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}}"

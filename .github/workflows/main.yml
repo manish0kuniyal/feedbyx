@@ -42,6 +42,11 @@ jobs:
             --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}" \
             --zip-file fileb://code.zip
 
+      - name: Wait for Lambda update to finish
+        run: |
+          aws lambda wait function-updated \
+            --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}"
+
       - name: Update Lambda environment variables
         run: |
           aws lambda update-function-configuration \

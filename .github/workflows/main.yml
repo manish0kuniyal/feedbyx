@@ -57,17 +57,17 @@ jobs:
       - name: Wait for Lambda update to finish
         run: aws lambda wait function-updated --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}"
 
-      - name: Update Lambda environment variables (safe JSON file)
+      - name: Update Lambda environment variables (safe with jq)
         run: |
-          cat > env.json <<EOF
-          {"Variables": {
-            "MONGO_URI":"${{ secrets.MONGO_URI }}",
-            "REDIS_HOST":"${{ secrets.REDIS_HOST }}",
-            "REDIS_PORT":"${{ secrets.REDIS_PORT }}",
-            "REDIS_USERNAME":"${{ secrets.REDIS_USERNAME }}",
-            "REDIS_PASSWORD":"${{ secrets.REDIS_PASSWORD }}"
-          }}
-          EOF
+          jq -n --arg mongo "${{ secrets.MONGO_URI }}" \
+                --arg host "${{ secrets.REDIS_HOST }}" \
+                --arg port "${{ secrets.REDIS_PORT }}" \
+                --arg user "${{ secrets.REDIS_USERNAME }}" \
+                --arg pass "${{ secrets.REDIS_PASSWORD }}" \
+            '{Variables: {MONGO_URI:$mongo, REDIS_HOST:$host, REDIS_PORT:$port, REDIS_USERNAME:$user, REDIS_PASSWORD:$pass}}' > env.json
+
+          cat env.json  # optional: debug, see the JSON file
+          
           aws lambda update-function-configuration \
             --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}" \
             --environment file://env.json \

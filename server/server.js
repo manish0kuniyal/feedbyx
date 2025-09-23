@@ -1,18 +1,18 @@
+// server.js
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
 
-import axios from "axios"; // make sure this is at the top of server.js
+import axios from "axios";
 import authRouter from "./routes/auth.js";
 import feedbackRouter from "./routes/feedback.js";
 import formsRouter from "./routes/forms.js";
-// import usersRouter from "./routes/users.js";
-import { connectDB } from "./utils/dbconnect.js";
-import usersRouter from "./routes/user.js"
-import cookieParser from "cookie-parser";
-import geoRoutes from './routes/geo.js';
+import usersRouter from "./routes/user.js";
+import geoRoutes from "./routes/geo.js";
+
 dotenv.config();
+
 const app = express();
 
 app.use(express.json());
@@ -20,32 +20,33 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:5173"], // add both if needed
+    origin: ["http://localhost:3000", "http://localhost:5173"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
-)
+);
 
+// Optional diagnostic middleware (keep while debugging, remove in production)
+app.use((req, res, next) => {
+  try {
+    console.log("req.constructor.name", req?.constructor?.name);
+    console.log("typeof req.on", typeof (req?.on));
+    console.log("res.constructor.name", res?.constructor?.name);
+    console.log("typeof res.on", typeof (res?.on));
+  } catch (e) {
+    // ignore logging errors
+  }
+  next();
+});
 
-await connectDB();
+app.get("/", (req, res) => res.json({ ok: "OK" }));
+app.post("/check", (req, res) => res.json({ POST: "OK" }));
 
-app.get("/",(req,res)=>{
-  return res.json({"ok":"OK"})
-})
-app.post("/check",(req,res)=>{
-  return res.json({"POST":"OK"})
-})
 app.use("/api/auth", authRouter);
 app.use("/api/feedback", feedbackRouter);
 app.use("/api/forms", formsRouter);
 app.use("/api/users", usersRouter);
-app.use('/api/geo', geoRoutes);
-// DB connect
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch(err => console.error("DB error:", err));
+app.use("/api/geo", geoRoutes);
 
-
-  // app.listen(5000, () => console.log("Server running on http://localhost:5000"));
-export default app
+export default app;

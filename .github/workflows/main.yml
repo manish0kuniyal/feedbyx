@@ -30,13 +30,10 @@ jobs:
             echo "package-lock.json not found in server/, using npm install --production as fallback"
             npm install --production
           fi
-
-      - name: Create deployment zip from server (includes handler + node_modules)
+      - name: Create deployment zip from server
         run: |
-          # make sure any previous zip is removed
-          rm -f code.zip
           cd server
-          zip -r ../code.zip . -x "code.zip" "*.git*" "*.log" "node_modules/.cache/*" ".github/*"
+          zip -r ../code.zip .
           cd ..
           echo "ZIP created; size:"
           ls -lh code.zip

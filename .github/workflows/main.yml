@@ -12,22 +12,21 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Use Node.js 18
+      - name: Use Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
-
-      - name: Install server dependencies
-        working-directory: server
-        run: npm ci
+          node-version: "22"   # match your Lambda runtime
 
       - name: Install zip
         run: sudo apt-get update && sudo apt-get install -y zip
 
-      - name: Create deployment zip (only server code)
+      - name: Install dependencies
+        run: npm ci   # installs node_modules at repo root
+
+      - name: Create deployment zip (include handler + code + node_modules)
         run: |
-          cd server
-          zip -r ../code.zip . -x "*.git*" "*.log" "node_modules/.cache/*"
+          zip -r code.zip . \
+            -x "code.zip" "*.git*" "*.log" "node_modules/.cache/*" ".github/*"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
@@ -43,12 +42,29 @@ jobs:
             --zip-file fileb://code.zip
 
       - name: Wait for Lambda update to finish
-        run: |
-          aws lambda wait function-updated \
-            --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}"
+        run: aws lambda wait function-updated --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}"
 
-      - name: Update Lambda environment variables
+      - name: Update Lambda environment variables (safe JSON)
         run: |
+          cat > env.json <<EOF
+          {"Variables": {
+            "MONGO_URI":"${{ secrets.MONGO_URI }}",
+            "REDIS_HOST":"${{ secrets.REDIS_HOST }}",
+            "REDIS_PORT":"${{ secrets.REDIS_PORT }}",
+            "REDIS_USERNAME":"${{ secrets.REDIS_USERNAME }}",
+            "REDIS_PASSWORD":"${{ secrets.REDIS_PASSWORD }}"
+          }}
+          EOF
           aws lambda update-function-configuration \
             --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}" \
-            --environment "Variables={MONGO_URI=${{ secrets.MONGO_URI }},REDIS_HOST=${{ secrets.REDIS_HOST }},REDIS_PORT=${{ secrets.REDIS_PORT }},REDIS_USERNAME=${{ secrets.REDIS_USERNAME }},REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}}"
+            --environment file://env.json \
+            --region us-east-1
+
+      - name: Test deployed Lambda (invoke)
+        run: |
+          printf '{"httpMethod":"GET","path":"/"}' > payload.json
+          aws lambda invoke \
+            --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}" \
+            --payload file://payload.json response.json \
+            --cli-binary-format raw-in-base64-out --region us-east-1
+          cat response.json || true

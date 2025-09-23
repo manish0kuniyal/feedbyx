@@ -59,7 +59,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/", (req, res) => res.json({ ok: "OK" }));
+app.get("/", (req, res) => res.json({ ok: "OK👍" }));
 app.post("/check", (req, res) => res.json({ POST: "OK" }));
 
 app.use("/api/auth", authRouter);

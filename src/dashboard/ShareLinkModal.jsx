@@ -7,7 +7,7 @@ export default function ShareLinkModal({ form, onClose }) {
   if (!form) return null;
 
   const baseUrl = import.meta.env.VITE_CLIENT_URL || window.location.origin;
-  const link = `http://localhost:5173/forms/${form.customId}`;
+  const link = `https://dev.feedbyx.com/forms/${form.customId}`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(link);

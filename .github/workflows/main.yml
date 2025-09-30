@@ -20,19 +20,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Cache node modules (client)
-        uses: actions/cache@v4
-        with:
-          path: client/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('client/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+      - name: Show client/ files (debug)
+        run: |
+          echo "Listing repo root:"
+          ls -la
+          echo "Listing client/:"
+          ls -la client || true
+          echo "Show lock files (repo root and client/):"
+          ls -la package-lock.json || true
+          ls -la client/package-lock.json || true
 
-      - name: Setup Node.js
+      - name: Setup Node.js (and cache npm deps using client/package-lock.json)
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
+          # point cache to the lockfile inside client/
+          cache-dependency-path: client/package-lock.json
 
       - name: Install dependencies (client)
         working-directory: client
@@ -68,10 +72,7 @@ jobs:
               --acl bucket-owner-full-control
           fi
           if [ -n "$DIST_ID" ]; then
-            echo "Creating CloudFront invalidation for distribution $DIST_ID"
             aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"
-          else
-            echo "No CLOUDFRONT_DISTRIBUTION_ID_PROD provided; skipping invalidation"
           fi
 
       - name: Deploy to S3 (staging)
@@ -89,8 +90,5 @@ jobs:
               --acl bucket-owner-full-control
           fi
           if [ -n "$DIST_ID" ]; then
-            echo "Creating CloudFront invalidation for distribution $DIST_ID"
             aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"
-          else
-            echo "No CLOUDFRONT_DISTRIBUTION_ID_STAGING provided; skipping invalidation"
           fi

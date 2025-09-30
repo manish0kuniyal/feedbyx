@@ -1,6 +1,5 @@
 name: Build & Deploy (S3 + CloudFront)
 
-# Run on pushes to main or staging
 on:
   push:
     branches:
@@ -12,8 +11,8 @@ permissions:
 
 jobs:
   build-and-deploy:
-    name: Build (sindie/client) and deploy to S3 + CloudFront
     runs-on: ubuntu-latest
+    name: Build (client/) and deploy to S3 + CloudFront
 
     steps:
       - name: Checkout repository
@@ -21,11 +20,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Cache node modules
+      - name: Cache node modules (client)
         uses: actions/cache@v4
         with:
-          path: sindie/client/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('sindie/client/package-lock.json') }}
+          path: client/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('client/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
 
@@ -35,15 +34,14 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      - name: Install dependencies (sindie/client)
-        working-directory: sindie/client
+      - name: Install dependencies (client)
+        working-directory: client
         run: npm ci
 
-      - name: Build (sindie/client) — inject Vite env vars
-        working-directory: sindie/client
+      - name: Build (client) — inject Vite env vars
+        working-directory: client
         env:
           CI: false
-          # Vite envs: these will be embedded into the built frontend
           VITE_BASE_URL: ${{ secrets.VITE_BASE_URL }}
           VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
         run: npm run build
@@ -62,9 +60,9 @@ jobs:
           DIST_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }}
         run: |
           echo "Deploying branch $GITHUB_REF to S3 bucket: $BUCKET"
-          aws s3 sync sindie/client/build s3://$BUCKET --delete --acl bucket-owner-full-control
-          if [ -f "sindie/client/build/index.html" ]; then
-            aws s3 cp sindie/client/build/index.html s3://$BUCKET/index.html \
+          aws s3 sync client/build s3://$BUCKET --delete --acl bucket-owner-full-control
+          if [ -f "client/build/index.html" ]; then
+            aws s3 cp client/build/index.html s3://$BUCKET/index.html \
               --metadata-directive REPLACE \
               --cache-control "no-cache, no-store, must-revalidate" \
               --acl bucket-owner-full-control
@@ -83,9 +81,9 @@ jobs:
           DIST_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_STAGING }}
         run: |
           echo "Deploying branch $GITHUB_REF to S3 bucket: $BUCKET"
-          aws s3 sync sindie/client/build s3://$BUCKET --delete --acl bucket-owner-full-control
-          if [ -f "sindie/client/build/index.html" ]; then
-            aws s3 cp sindie/client/build/index.html s3://$BUCKET/index.html \
+          aws s3 sync client/build s3://$BUCKET --delete --acl bucket-owner-full-control
+          if [ -f "client/build/index.html" ]; then
+            aws s3 cp client/build/index.html s3://$BUCKET/index.html \
               --metadata-directive REPLACE \
               --cache-control "no-cache, no-store, must-revalidate" \
               --acl bucket-owner-full-control

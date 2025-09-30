@@ -1,81 +1,98 @@
-name: Deploy Lambda Function
+name: Build & Deploy (S3 + CloudFront)
 
+# Run on pushes to main or staging
 on:
   push:
     branches:
       - main
+      - staging
+
+permissions:
+  contents: read
 
 jobs:
-  deploy:
+  build-and-deploy:
+    name: Build (sindie/client) and deploy to S3 + CloudFront
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      - name: Use Node.js 22
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: sindie/client/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('sindie/client/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: '18'
+          cache: 'npm'
 
-      - name: Install zip
-        run: sudo apt-get update && sudo apt-get install -y zip
+      - name: Install dependencies (sindie/client)
+        working-directory: sindie/client
+        run: npm ci
 
-      # Install dependencies inside server/ (preferred: npm ci if package-lock.json exists)
-      - name: Install server dependencies
-        working-directory: server
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci --production
-          else
-            echo "package-lock.json not found in server/, using npm install --production as fallback"
-            npm install --production
-          fi
-      - name: Create deployment zip from server
-        run: |
-          cd server
-          zip -r ../code.zip .
-          cd ..
-          echo "ZIP created; size:"
-          ls -lh code.zip
+      - name: Build (sindie/client) — inject Vite env vars
+        working-directory: sindie/client
+        env:
+          CI: false
+          # Vite envs: these will be embedded into the built frontend
+          VITE_BASE_URL: ${{ secrets.VITE_BASE_URL }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+        run: npm run build
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Deploy to Lambda
+      - name: Deploy to S3 (production)
+        if: github.ref == 'refs/heads/main'
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_PROD }}
+          DIST_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }}
         run: |
-          aws lambda update-function-code \
-            --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}" \
-            --zip-file fileb://code.zip
+          echo "Deploying branch $GITHUB_REF to S3 bucket: $BUCKET"
+          aws s3 sync sindie/client/build s3://$BUCKET --delete --acl bucket-owner-full-control
+          if [ -f "sindie/client/build/index.html" ]; then
+            aws s3 cp sindie/client/build/index.html s3://$BUCKET/index.html \
+              --metadata-directive REPLACE \
+              --cache-control "no-cache, no-store, must-revalidate" \
+              --acl bucket-owner-full-control
+          fi
+          if [ -n "$DIST_ID" ]; then
+            echo "Creating CloudFront invalidation for distribution $DIST_ID"
+            aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"
+          else
+            echo "No CLOUDFRONT_DISTRIBUTION_ID_PROD provided; skipping invalidation"
+          fi
 
-      - name: Wait for Lambda update to finish
-        run: aws lambda wait function-updated --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}"
-
-      - name: Update Lambda environment variables (safe with jq)
+      - name: Deploy to S3 (staging)
+        if: github.ref == 'refs/heads/staging'
+        env:
+          BUCKET: ${{ secrets.S3_BUCKET_STAGING }}
+          DIST_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_STAGING }}
         run: |
-          jq -n --arg mongo "${{ secrets.MONGO_URI }}" \
-                --arg host "${{ secrets.REDIS_HOST }}" \
-                --arg port "${{ secrets.REDIS_PORT }}" \
-                --arg user "${{ secrets.REDIS_USERNAME }}" \
-                --arg pass "${{ secrets.REDIS_PASSWORD }}" \
-            '{Variables: {MONGO_URI:$mongo, REDIS_HOST:$host, REDIS_PORT:$port, REDIS_USERNAME:$user, REDIS_PASSWORD:$pass}}' > env.json
-
-          cat env.json  # optional: debug, see the JSON file
-          
-          aws lambda update-function-configuration \
-            --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}" \
-            --environment file://env.json \
-            --region us-east-1
-
-      - name: Test deployed Lambda (invoke)
-        run: |
-          printf '{"httpMethod":"GET","path":"/"}' > payload.json
-          aws lambda invoke \
-            --function-name "${{ secrets.LAMBDA_FUNCTION_NAME }}" \
-            --payload file://payload.json response.json \
-            --cli-binary-format raw-in-base64-out --region us-east-1
-          echo "----- invoke output -----"
-          cat response.json || true
+          echo "Deploying branch $GITHUB_REF to S3 bucket: $BUCKET"
+          aws s3 sync sindie/client/build s3://$BUCKET --delete --acl bucket-owner-full-control
+          if [ -f "sindie/client/build/index.html" ]; then
+            aws s3 cp sindie/client/build/index.html s3://$BUCKET/index.html \
+              --metadata-directive REPLACE \
+              --cache-control "no-cache, no-store, must-revalidate" \
+              --acl bucket-owner-full-control
+          fi
+          if [ -n "$DIST_ID" ]; then
+            echo "Creating CloudFront invalidation for distribution $DIST_ID"
+            aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"
+          else
+            echo "No CLOUDFRONT_DISTRIBUTION_ID_STAGING provided; skipping invalidation"
+          fi

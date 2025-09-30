@@ -14,7 +14,7 @@ export default function Header({ user, setUser, sidebarOpen, toggleSidebar }) {
 
   const handleLogout = async () => {
     try {
-      await axios.post('http://localhost:5000/api/auth/logout', {}, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_BASE_URL}api/auth/logout`, {}, { withCredentials: true });
       setUser(null);             
       window.location.href = '/'; 
     } catch (err) {

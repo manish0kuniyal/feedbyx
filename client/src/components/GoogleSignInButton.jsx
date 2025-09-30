@@ -12,13 +12,13 @@ export default function GoogleSignInButton() {
 
       // Send token to backend and set cookie
       await axios.post(
-        "http://localhost:5000/api/auth/google/token",
+        `${import.meta.env.VITE_BASE_URL}api/auth/google/token`,
         { token },
         { withCredentials: true }
       );
 
       // Fetch current user to confirm login
-      const meRes = await axios.get("http://localhost:5000/api/auth/me", {
+      const meRes = await axios.get(`${import.meta.env.VITE_BASE_URL}api/auth/me`, {
         withCredentials: true,
       });
 

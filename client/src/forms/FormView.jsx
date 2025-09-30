@@ -33,7 +33,7 @@ export default function FormView() {
     (async () => {
       try {
         setError('');
-        const res = await fetch(`http://localhost:5000/api/forms/${formId}`);
+        const res = await fetch(`${import.meta.env.VITE_BASE_URL}api/forms/${formId}`);
         if (!res.ok) throw new Error('Form not found');
         const data = await res.json();
         setForm(data);
@@ -190,7 +190,7 @@ export default function FormView() {
     // submit
     try {
       setIsSubmitting(true);
-      const res = await fetch('http://localhost:5000/api/feedback', {
+      const res = await fetch(`${import.meta.env.VITE_BASE_URL}api/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

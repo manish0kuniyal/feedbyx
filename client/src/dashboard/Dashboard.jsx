@@ -54,7 +54,7 @@ const [groupedFeedbacks, setGroupedFeedbacks] = useState({});
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/auth/me", {
+        const res = await fetch(`${import.meta.env.VITE_BASE_URL}api/auth/me`, {
           credentials: "include",
         });
 
@@ -82,7 +82,7 @@ const [groupedFeedbacks, setGroupedFeedbacks] = useState({});
 
   const fetchForms = async (uid) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/forms?uid=${uid}`);
+      const res = await fetch(`${import.meta.env.VITE_BASE_URL}api/forms?uid=${uid}`);
       const data = await res.json();
       setForms(data.forms || []);
     } catch (err) {
@@ -96,7 +96,7 @@ const [groupedFeedbacks, setGroupedFeedbacks] = useState({});
 
   // ✅ Logout
   const handleLogout = async () => {
-    await fetch("http://localhost:5000/api/auth/logout", {
+    await fetch(`${import.meta.env.VITE_BASE_URL}api/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
@@ -109,7 +109,7 @@ const fetchFeedbacks = async (uid) => {
   if (!uid) return;
   setLoadingResponses(true);
   try {
-    const res = await fetch(`http://localhost:5000/api/feedback?uid=${uid}`);
+    const res = await fetch(`${import.meta.env.VITE_BASE_URL}api/feedback?uid=${uid}`);
     if (!res.ok) {
       console.error('Failed to fetch feedbacks:', res.statusText);
       setGroupedFeedbacks({});

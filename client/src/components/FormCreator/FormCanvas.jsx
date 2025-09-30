@@ -91,7 +91,7 @@ const addField = (fieldType) => {
       setIsSaving(true);
       const formData = { name: formName, uid, fields };
 
-      const res = await fetch('http://localhost:5000/api/forms', {
+      const res = await fetch(`${import.meta.env.VITE_BASE_URL}api/forms`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* in index.css or global.css */
+@import "leaflet/dist/leaflet.css";
 
 :root {
   --white: #cdd2ca;

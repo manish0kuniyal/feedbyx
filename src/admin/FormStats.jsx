@@ -111,10 +111,11 @@ export default function FormStats({ groupedFeedbacks }) {
       const meta = fb?.metadata || {};
       const label = meta.locationGeo?.label || meta.locationLabel || meta.ipGeo?.label || "Unknown";
       const country = meta.locationGeo?.country || meta.ipGeo?.country || null;
-      if (!m[label]) m[label] = { label, country, count: 0 };
+      const countryCode = getCountryCode(country);
+      if (!m[label]) m[label] = { label, country, countryCode, count: 0 };
       m[label].count++;
     });
-    return Object.values(m).sort((a, b) => b.count - a.count).slice(0, 8);
+    return Object.values(m).sort((a, b) => b.count - a.count).slice(0, 12);
   }, [allFeedbackItems]);
 
   // User-Agent breakdown
@@ -210,7 +211,7 @@ export default function FormStats({ groupedFeedbacks }) {
         </motion.div>
       </div>
 
-      {/* Map — full width below charts */}
+      {/* Map + Locations: map left, locations right on md+, stacked on small screens */}
       <motion.div
         className={`${baseCardClasses} w-full`}
         variants={cardVariants}
@@ -228,9 +229,58 @@ export default function FormStats({ groupedFeedbacks }) {
           </div>
         </div>
 
-        <div className={`${smallCard} w-full h-[420px] overflow-hidden`}>
-          <div className="w-full h-full">
-            <FeedbackMap feedbacks={allFeedbackItems} height="100%" />
+        <div className="w-full">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Left: map (2/3 width on md) */}
+            <div className="md:col-span-2 h-[420px] overflow-hidden rounded-lg">
+              <div className={`${smallCard} h-full w-full p-0 overflow-hidden`}>
+                <FeedbackMap feedbacks={allFeedbackItems} height="100%" />
+              </div>
+            </div>
+
+            {/* Right: locations list (1/3 width on md) */}
+            <div className="md:col-span-1">
+              <div className={`${smallCard} h-[420px] overflow-auto p-4 flex flex-col gap-3`}>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm font-semibold">{topLocations.length} locations</div>
+                  <div className="text-xs text-gray-400">Top</div>
+                </div>
+
+                {topLocations.length === 0 ? (
+                  <div className="text-sm text-gray-400 mt-4">No location data</div>
+                ) : (
+                  <ul className="divide-y divide-gray-100/50">
+                    {topLocations.map((loc) => (
+                      <li key={loc.label} className="py-3 flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {/* optional flag emoji if countryCode present */}
+                          <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-white/5 text-sm font-semibold">
+                            {loc.countryCode ? (
+                              // convert country code to emoji flag
+                              String.fromCodePoint(...loc.countryCode.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0)))
+                            ) : (
+                              <FiGlobe className="w-4 h-4" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium truncate">{loc.label}</div>
+                            <div className="text-xs opacity-70 truncate">
+                              {loc.country ? `${loc.country}` : '—'}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end">
+                          <div className="text-sm font-semibold">{loc.count}</div>
+                          <div className="text-xs opacity-70">submissions</div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>

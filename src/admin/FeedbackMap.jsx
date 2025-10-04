@@ -5,10 +5,6 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-/**
- * Leaflet marker icon fix for ESM environments (no `require`).
- * Using import.meta.url -> works in Vite, modern ESM bundlers, and Next client components.
- */
 const markerIconUrl = new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href;
 const markerIcon2xUrl = new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href;
 const markerShadowUrl = new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href;
@@ -20,14 +16,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadowUrl,
 });
 
-/**
- * FeedbackMap
- *
- * Props:
- *  - feedbacks: array of feedback objects (each may have metadata.location.lat & metadata.location.lng,
- *               or metadata.ipGeo.lat & metadata.ipGeo.lng). Any other metadata will be available in popups.
- *  - height: CSS height for the map container (default: '300px')
- */
 export default function FeedbackMap({ feedbacks = [], height = '300px' }) {
   // normalize points: prefer metadata.location, fallback to metadata.ipGeo
   const points = useMemo(() => {

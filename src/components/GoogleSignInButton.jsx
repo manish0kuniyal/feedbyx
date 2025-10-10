@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useUserStore } from '../utils/userstore'; // adjust path
+import { useUserStore } from '../utils/userstore';
 import { FaGoogle } from 'react-icons/fa';
+import { MdArrowForwardIos } from 'react-icons/md';
 import { motion } from 'framer-motion';
 
 export default function GoogleSignInButton() {
@@ -21,14 +22,12 @@ export default function GoogleSignInButton() {
       const token = credentialResponse?.credential;
       if (!token) throw new Error('No credential token received');
 
-      // send token to backend, server should set auth cookie
       await axios.post(
         `${import.meta.env.VITE_BASE_URL}api/auth/google/token`,
         { token },
         { withCredentials: true }
       );
 
-      // fetch user and update store
       const meRes = await axios.get(`${import.meta.env.VITE_BASE_URL}api/auth/me`, {
         withCredentials: true,
       });
@@ -37,38 +36,37 @@ export default function GoogleSignInButton() {
         setUser(meRes.data.user);
         navigate('/dashboard');
       } else {
-        // Edge case: backend didn't return user — still navigate or show error
         console.warn('Authentication succeeded but /api/auth/me returned no user');
         navigate('/dashboard');
       }
     } catch (err) {
       console.error('Login failed:', err);
-      // Optionally show toast / UI feedback
     } finally {
       setLoading(false);
     }
   };
 
-  // If user is already signed in, show "Go to Dashboard" button
   if (user) {
     return (
       <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={{ scale: 1.03, x: 2 }}
+        whileTap={{ scale: 0.97 }}
         onClick={() => navigate('/dashboard')}
-        className="flex items-center gap-2 px-4 py-2 rounded bg-[var(--blue)] text-white font-semibold"
+        className="flex items-center gap-2 px-4 py-2 rounded bg-[var(--blue)] text-white font-semibold transition-all"
       >
-        Go to Dashboard
+        <span>Dashboard</span>
+        <MdArrowForwardIos className="text-lg" />
       </motion.button>
     );
   }
 
-  // Otherwise render the GoogleLogin button
   return (
     <div>
-      {/* Wrap to show a loading state if needed */}
       {loading ? (
-        <button disabled className="flex items-center gap-2 px-4 py-2 rounded bg-gray-300 text-gray-700">
+        <button
+          disabled
+          className="flex items-center gap-2 px-4 py-2 rounded bg-gray-300 text-gray-700"
+        >
           Signing in...
         </button>
       ) : (

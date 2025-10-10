@@ -15,13 +15,16 @@ import ShareLinkModal from './ShareLinkModal';
 import { TbLayoutNavbarExpandFilled } from "react-icons/tb";
 import { MdOutlineHowToVote } from "react-icons/md";
 import FeedbackCards from '../admin/FeedbackCards';
-
+import Loader from '../components/Loading';
 export default function Dashboard() {
   const setUser = useUserStore((state) => state.setUser);
   const user = useUserStore((state) => state.user);
   const router = useNavigate();
 
-const [loadingResponses, setLoadingResponses] = useState(false);
+  const [loadingAuth, setLoadingAuth] = useState(true); // initial auth/loading state
+  const [loadingForms, setLoadingForms] = useState(false);
+  const [loadingResponses, setLoadingResponses] = useState(false);
+
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
   const [forms, setForms] = useState([]);
   const [formName, setFormName] = useState('');
@@ -31,7 +34,8 @@ const [loadingResponses, setLoadingResponses] = useState(false);
   const [currentForm, setCurrentForm] = useState(null);
   const darkMode = useThemeStore((state) => state.darkMode);
   const toggleDarkMode = useThemeStore((state) => state.toggleDarkMode);
-const [groupedFeedbacks, setGroupedFeedbacks] = useState({});
+  const [groupedFeedbacks, setGroupedFeedbacks] = useState({});
+
   // Handle resize for responsive sidebar
   useEffect(() => {
     const handleResize = () => {
@@ -47,18 +51,21 @@ const [groupedFeedbacks, setGroupedFeedbacks] = useState({});
 
   useEffect(() => {
     if (!user) {
-      router("/"); 
+      router("/");
     }
   }, [user, router]);
 
+  // fetch current user (auth) — show fullscreen loader while checking
   useEffect(() => {
     const fetchUser = async () => {
+      setLoadingAuth(true);
       try {
         const res = await fetch(`${import.meta.env.VITE_BASE_URL}api/auth/me`, {
           credentials: "include",
         });
 
         if (!res.ok) {
+          setLoadingAuth(false);
           router("/");
           return;
         }
@@ -68,10 +75,13 @@ const [groupedFeedbacks, setGroupedFeedbacks] = useState({});
       } catch (err) {
         console.error("Auth check failed:", err);
         router("/");
+      } finally {
+        setLoadingAuth(false);
       }
     };
 
     fetchUser();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [setUser, router]);
 
   const handleCreateForm = () => {
@@ -81,17 +91,28 @@ const [groupedFeedbacks, setGroupedFeedbacks] = useState({});
   };
 
   const fetchForms = async (uid) => {
+    if (!uid) return;
+    setLoadingForms(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_BASE_URL}api/forms?uid=${uid}`);
+      if (!res.ok) {
+        console.error('Failed to fetch forms:', res.statusText);
+        setForms([]);
+        return;
+      }
       const data = await res.json();
       setForms(data.forms || []);
     } catch (err) {
       console.error('Failed to fetch forms:', err);
+      setForms([]);
+    } finally {
+      setLoadingForms(false);
     }
   };
 
   useEffect(() => {
     if (user?.userId && view === 'view') fetchForms(user.userId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.userId, view]);
 
   // ✅ Logout
@@ -104,32 +125,34 @@ const [groupedFeedbacks, setGroupedFeedbacks] = useState({});
     router("/");
   };
 
-// add this helper inside Dashboard
-const fetchFeedbacks = async (uid) => {
-  if (!uid) return;
-  setLoadingResponses(true);
-  try {
-    const res = await fetch(`${import.meta.env.VITE_BASE_URL}api/feedback?uid=${uid}`);
-    if (!res.ok) {
-      console.error('Failed to fetch feedbacks:', res.statusText);
+  // fetchFeedbacks (responses)
+  const fetchFeedbacks = async (uid) => {
+    if (!uid) return;
+    setLoadingResponses(true);
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BASE_URL}api/feedback?uid=${uid}`);
+      if (!res.ok) {
+        console.error('Failed to fetch feedbacks:', res.statusText);
+        setGroupedFeedbacks({});
+        return;
+      }
+      const data = await res.json();
+      // Assuming API returns { feedbacksByForm: { [formId]: [{...}, ...] } }
+      setGroupedFeedbacks(data.feedbacksByForm || {});
+    } catch (err) {
+      console.error('Error fetching feedbacks:', err);
       setGroupedFeedbacks({});
-      return;
+    } finally {
+      setLoadingResponses(false);
     }
-    const data = await res.json();
-    // Assuming API returns { feedbacksByForm: { [formId]: [{...}, ...] } }
-    setGroupedFeedbacks(data.feedbacksByForm || {});
-  } catch (err) {
-    console.error('Error fetching feedbacks:', err);
-    setGroupedFeedbacks({});
-  } finally {
-    setLoadingResponses(false);
-  }
-};useEffect(() => {
-  if (view === 'responses' && user?.userId) {
-    fetchFeedbacks(user.userId);
-  }
-}, [view, user?.userId]);
+  };
 
+  useEffect(() => {
+    if (view === 'responses' && user?.userId) {
+      fetchFeedbacks(user.userId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, user?.userId]);
 
   const containerClasses = darkMode
     ? 'flex h-screen bg-[var(--darkest)] text-gray-100 transition-colors duration-300 p-4 gap-4 relative'
@@ -139,12 +162,12 @@ const fetchFeedbacks = async (uid) => {
     ? 'flex-1 p-6 overflow-auto bg-[var(--darker)] text-gray-100 transition-colors duration-300 rounded-2xl shadow-lg'
     : 'flex-1 p-6 overflow-auto bg-white text-gray-900 transition-colors duration-300 rounded-2xl shadow-lg';
 
-const topButtons = [
-  { label: 'Create', onClick: () => setView('create'), icon: <FaPlus /> },
-  { label: 'Forms', onClick: () => setView('view'), icon: <SiFormspree /> },
-  { label: 'Responses', onClick: () => setView('responses'), icon: <MdOutlineHowToVote />, fontBold: true },
-  { label: 'Analytics', onClick: () => setView('admin'), icon: <MdOutlineAutoGraph />, fontBold: true },
-];
+  const topButtons = [
+    { label: 'Create', onClick: () => setView('create'), icon: <FaPlus /> },
+    { label: 'Forms', onClick: () => setView('view'), icon: <SiFormspree /> },
+    { label: 'Responses', onClick: () => setView('responses'), icon: <MdOutlineHowToVote />, fontBold: true },
+    { label: 'Analytics', onClick: () => setView('admin'), icon: <MdOutlineAutoGraph />, fontBold: true },
+  ];
 
   const bottomButtons = [
     {
@@ -160,88 +183,96 @@ const topButtons = [
     },
   ];
 
+  // Show fullscreen loader while auth is resolving
+  if (loadingAuth) {
+    return (
+      <div className={containerClasses}>
+        <Loader fullScreen />
+      </div>
+    );
+  }
+
   return (
     <div className={containerClasses}>
       {/* Sidebar */}
       <AnimatePresence>
-  {sidebarOpen && (
-    <motion.div
-      initial={{ x: -300, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: -300, opacity: 0 }}
-      transition={{ type: 'spring', stiffness: 250, damping: 30 }}
-      className={`fixed md:static top-0 left-0 h-full md:h-auto z-50 w-60 p-4 flex flex-col rounded-r-2xl shadow-lg
-        ${darkMode ? 'bg-[var(--dark)]' : 'bg-white'}`}
-    >
-      {/* Top section (header + buttons) */}
-      <div className="flex-1 flex flex-col">
-        {/* Sidebar header */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="text-lg font-bold">
-            {user?.name ? ` ${user.name} ` : 'Welcome!'}
-          </div>
-          {/* Close button only on mobile */}
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="md:hidden p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+        {sidebarOpen && (
+          <motion.div
+            initial={{ x: -300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -300, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 250, damping: 30 }}
+            className={`fixed md:static top-0 left-0 h-full md:h-auto z-50 w-60 p-4 flex flex-col rounded-r-2xl shadow-lg
+              ${darkMode ? 'bg-[var(--dark)]' : 'bg-white'}`}
           >
-            <FiX className="text-xl" />
-          </button>
-        </div>
+            {/* Top section (header + buttons) */}
+            <div className="flex-1 flex flex-col">
+              {/* Sidebar header */}
+              <div className="flex justify-between items-center mb-6">
+                <div className="text-lg font-bold">
+                  {user?.name ? ` ${user.name} ` : 'Welcome!'}
+                </div>
+                {/* Close button only on mobile */}
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="md:hidden p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                >
+                  <FiX className="text-xl" />
+                </button>
+              </div>
 
-        {/* Top buttons */}
-        <div>
-          {topButtons.map((btn, idx) => (
-            <motion.button
-              key={idx}
-              onClick={btn.onClick}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              className={`flex items-center gap-2 mb-3 px-4 py-3 rounded font-bold text-base transition-colors
-                w-11/12 mx-auto
-                ${darkMode
-                  ? 'hover:bg-gray-700 hover:text-[var(--lightblue)]'
-                  : 'hover:bg-gray-200 hover:text-[var(--lightblue)]'}`}
-            >
-              {btn.label} {btn.icon}
-            </motion.button>
-          ))}
-        </div>
-      </div>
+              {/* Top buttons */}
+              <div>
+                {topButtons.map((btn, idx) => (
+                  <motion.button
+                    key={idx}
+                    onClick={btn.onClick}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className={`flex items-center gap-2 mb-3 px-4 py-3 rounded font-bold text-base transition-colors
+                      w-11/12 mx-auto
+                      ${darkMode
+                        ? 'hover:bg-gray-700 hover:text-[var(--lightblue)]'
+                        : 'hover:bg-gray-200 hover:text-[var(--lightblue)]'}`}
+                  >
+                    {btn.label} {btn.icon}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
 
-      {/* Bottom buttons */}
-      <div className="flex flex-col gap-3 mt-6">
-        {bottomButtons.map((btn, idx) => (
-          <motion.button
-            key={idx}
-            onClick={btn.onClick}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className={`flex items-center gap-2 mb-3 px-3 py-2 rounded text-sm transition-colors 
-              ${btn.fontBold ? 'font-bold' : ''}
-              ${darkMode
-                ? 'hover:bg-gray-700 hover:text-[var(--lightblue)]'
-                : 'hover:bg-gray-200 hover:text-[var(--lightblue)]'}`}
-          >
-            {btn.label} {btn.icon}
-          </motion.button>
-        ))}
-      </div>
-    </motion.div>
-  )}
-</AnimatePresence>
+            {/* Bottom buttons */}
+            <div className="flex flex-col gap-3 mt-6">
+              {bottomButtons.map((btn, idx) => (
+                <motion.button
+                  key={idx}
+                  onClick={btn.onClick}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`flex items-center gap-2 mb-3 px-3 py-2 rounded text-sm transition-colors 
+                    ${btn.fontBold ? 'font-bold' : ''}
+                    ${darkMode
+                      ? 'hover:bg-gray-700 hover:text-[var(--lightblue)]'
+                      : 'hover:bg-gray-200 hover:text-[var(--lightblue)]'}`}
+                >
+                  {btn.label} {btn.icon}
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hamburger when sidebar is closed */}
       {!sidebarOpen && (
         <motion.button
-  onClick={() => setSidebarOpen(true)}
-  whileHover={{ scale: 1.1 }}
-  className="absolute top-4  left-4 md:hidden p-2 rounded text-white shadow-md"
-  style={{ backgroundColor: 'var(--lightblue)' }}
->
-  <TbLayoutNavbarExpandFilled className="text-xl " />
-</motion.button>
-
+          onClick={() => setSidebarOpen(true)}
+          whileHover={{ scale: 1.1 }}
+          className="absolute top-4  left-4 md:hidden p-2 rounded text-white shadow-md"
+          style={{ backgroundColor: 'var(--lightblue)' }}
+        >
+          <TbLayoutNavbarExpandFilled className="text-xl " />
+        </motion.button>
       )}
 
       {/* Main Content */}
@@ -250,37 +281,47 @@ const topButtons = [
 
         {view === 'view' && (
           <>
-            <FeedbackGrid
-              forms={forms}
-              setEmbedForm={setEmbedForm}
-              setShareForm={setShareForm}
-            />
-            <ShareLinkModal
-              form={shareForm}
-              onClose={() => setShareForm(null)}
-            />
+            {loadingForms ? (
+              <div className="flex justify-center py-8">
+                <Loader size="w-20 h-20" />
+              </div>
+            ) : (
+              <>
+                <FeedbackGrid
+                  forms={forms}
+                  setEmbedForm={setEmbedForm}
+                  setShareForm={setShareForm}
+                />
+                <ShareLinkModal
+                  form={shareForm}
+                  onClose={() => setShareForm(null)}
+                />
+              </>
+            )}
           </>
         )}
-        
-       
- {view === 'responses' && (
-  <>
-    <FeedbackCards
-      groupedFeedbacks={groupedFeedbacks}
-     setEmbedForm={setEmbedForm}
-      setShareForm={setShareForm}
-    />
-    <ShareLinkModal
-      form={shareForm}
-      onClose={() => setShareForm(null)}
-    />
-    {loadingResponses && (
-      <div className="text-center py-6">Loading responses...</div>
-    )}
-  </>
-)}
 
-
+        {view === 'responses' && (
+          <>
+            {loadingResponses ? (
+              <div className="flex justify-center py-8">
+                <Loader size="w-20 h-20" />
+              </div>
+            ) : (
+              <>
+                <FeedbackCards
+                  groupedFeedbacks={groupedFeedbacks}
+                  setEmbedForm={setEmbedForm}
+                  setShareForm={setShareForm}
+                />
+                <ShareLinkModal
+                  form={shareForm}
+                  onClose={() => setShareForm(null)}
+                />
+              </>
+            )}
+          </>
+        )}
 
         {view === 'admin' && <AdminDashboard />}
         <Modal embedForm={embedForm} setEmbedForm={setEmbedForm} />

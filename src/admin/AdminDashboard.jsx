@@ -10,18 +10,15 @@ import FormCard from './FormCard';
 import AdminStatsCard from './AdminStatsCard';
 import FormStats from './FormStats';
 import ExportCSVButton from './ExportCSVButton';
-
+import Loader from '../components/Loading';
 function normalizeFeedback(fb) {
-  // ensure fb is an object
   const native = fb && typeof fb === 'object' ? fb : {};
 
-  // prefer responses object if present, otherwise treat root as responses
   const responses =
     native.responses && typeof native.responses === 'object' && native.responses !== null
       ? { ...native.responses }
       : { ...native };
 
-  // common aliases for form name
   responses.formName =
     responses.formName ||
     responses.form_name ||
@@ -31,7 +28,6 @@ function normalizeFeedback(fb) {
     native.form_name ||
     undefined;
 
-  // normalize createdAt
   responses.createdAt =
     responses.createdAt ||
     native.createdAt ||
@@ -39,12 +35,10 @@ function normalizeFeedback(fb) {
     native.created_at ||
     undefined;
 
-  // normalize rating (common variants)
   if (responses.rating == null) {
     responses.rating = native.rating ?? responses['service review'] ?? responses['service_review'] ?? undefined;
   }
 
-  // normalize name/email keys (optional)
   responses.name = responses.name || responses.Name || responses.fullName || responses.full_name;
   responses.email = responses.email || responses.Email || responses.emailAddress || responses.email_address;
 
@@ -65,15 +59,26 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.userId) {
-      fetchFeedbacks(user.userId);
-    }
+    if (!user?.userId) return;
+    const controller = new AbortController();
+    fetchFeedbacks(user.userId, controller.signal);
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.userId]);
 
-  const fetchFeedbacks = async (uid) => {
+  const fetchFeedbacks = async (uid, signal) => {
+    if (!uid) {
+      setGroupedFeedbacks({});
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_BASE_URL}api/feedback?uid=${uid}`);
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL}api/feedback?uid=${uid}`, {
+        signal,
+      });
+
       if (response.ok) {
         const data = await response.json();
         const raw = data.feedbacksByForm || {};
@@ -88,9 +93,15 @@ export default function AdminDashboard() {
         setGroupedFeedbacks(normalizedByForm);
       } else {
         console.error('fetchFeedbacks failed', response.status);
+        setGroupedFeedbacks({});
       }
     } catch (error) {
-      console.error("Error fetching feedbacks:", error);
+      if (error.name === 'AbortError') {
+        // fetch was aborted — ignore
+      } else {
+        console.error('Error fetching feedbacks:', error);
+        setGroupedFeedbacks({});
+      }
     } finally {
       setLoading(false);
     }
@@ -122,7 +133,6 @@ export default function AdminDashboard() {
     <div className={`max-w-6xl mx-auto p-6 transition-colors ${darkMode ? ' text-gray-100' : ' text-gray-900'}`}>
       {/* Top Bar */}
       <div className="flex justify-between items-center mb-6">
-        {/* <h1 className="text-3xl font-bold text-[var(--blue)]">Feedback Dashboard</h1> */}
         <div className="flex gap-3">
           <button
             onClick={() => fetchFeedbacks(user?.userId)}
@@ -252,8 +262,20 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Charts */}
-      {!loading && totalForms > 0 && <FormStats groupedFeedbacks={groupedFeedbacks} />}
+      {/* Charts / FormStats area */}
+      <div>
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <Loader size="w-20 h-20" />
+          </div>
+        ) : totalForms > 0 ? (
+          <FormStats groupedFeedbacks={groupedFeedbacks} />
+        ) : (
+          <div className={`py-12 text-center ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            No feedback available yet.
+          </div>
+        )}
+      </div>
     </div>
   );
 }

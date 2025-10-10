@@ -1,19 +1,20 @@
-// import { signIn } from 'next-auth/react';
-import { FaGoogle } from 'react-icons/fa';
+'use client';
 import GoogleSignInButton from '../GoogleSignInButton';
+
 export default function Navbar() {
   return (
-    <header className="flex items-center justify-between w-full max-w-6xl mx-auto py-6 z-10 relative">
-      {/* Logo instead of text */}
-      <div className="flex items-center">
+    <header className="relative flex items-center justify-between w-full max-w-6xl mx-auto py-6 px-4 md:px-0 z-10">
+      <div className="relative flex items-center">
+        <div className="absolute -top-10 -left-9 w-40 h-40 bg-[#dae6dd] opacity-70 blur-[110px] rounded-full pointer-events-none" />
+
         <img
-          src="/logo.png" 
-          alt="Feedbyx Logo" 
+          src="/logo.png"
+          alt="Feedbyx Logo"
           width={120}
           height={100}
+          className="relative z-10 object-contain"
         />
       </div>
-
       <div className="flex items-center gap-4">
         <GoogleSignInButton />
       </div>

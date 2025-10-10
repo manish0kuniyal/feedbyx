@@ -8,7 +8,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/forms/:formId" element={<FormView />} /> {/* dynamic route */}
+        <Route path="/forms/:formId" element={<FormView />} /> 
         <Route path="*" element={<NotFound />} />
       </Routes>
   

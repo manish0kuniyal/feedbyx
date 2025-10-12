@@ -13,38 +13,43 @@ import FAQSection from './Faq';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { user, setUser } = useUserStore();
-  const [loading, setLoading] = useState(true);
+  const { setUser } = useUserStore(); 
+  const [verifying, setVerifying] = useState(true); 
 
   useEffect(() => {
+    let cancelled = false;
     const checkAuth = async () => {
       try {
-        const res = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}api/auth/me`,
-          { withCredentials: true }
-        );
+        const res = await axios.get(`${import.meta.env.VITE_BASE_URL}api/auth/me`, {
+          withCredentials: true,
+        });
+
+        if (cancelled) return;
 
         if (res.data?.user) {
           setUser(res.data.user);
           navigate('/dashboard');
           return;
+        } else {
+          setUser(null);
         }
       } catch (err) {
-        console.log('User not logged in or token invalid');
+        if (!cancelled) {
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setVerifying(false);
       }
     };
 
-    if (user) {
-      navigate('/dashboard');
-      return;
-    }
-
     checkAuth();
-  }, [user, setUser, navigate]);
 
-  if (loading) {
+    return () => {
+      cancelled = true;
+    };
+  }, [setUser, navigate]);
+
+  if (verifying) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black text-white">
         Checking session...

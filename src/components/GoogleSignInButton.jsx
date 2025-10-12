@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +15,27 @@ export default function GoogleSignInButton() {
   const user = useUserStore((s) => s.user);
 
   const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(true); 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_BASE_URL}api/auth/me`, {
+          withCredentials: true,
+        });
+        if (!cancelled) {
+          if (!res.data?.user) setUser(null);
+        }
+      } catch (err) {
+        if (!cancelled) setUser(null);
+      } finally {
+        if (!cancelled) setVerifying(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleLogin = async (credentialResponse) => {
     try {
@@ -45,6 +66,14 @@ export default function GoogleSignInButton() {
       setLoading(false);
     }
   };
+
+  if (verifying) {
+    return (
+      <button disabled className="flex items-center gap-2 px-4 py-2 rounded bg-gray-200 text-gray-600">
+        Checking session...
+      </button>
+    );
+  }
 
   if (user) {
     return (

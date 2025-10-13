@@ -10,11 +10,12 @@ import HowItWorks from './HowItWorks';
 import Footer from './Footer';
 import PricingSection from './PricingSection';
 import FAQSection from './Faq';
+import Loader from '../Loading';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { setUser } = useUserStore(); 
-  const [verifying, setVerifying] = useState(true); 
+  const { setUser } = useUserStore();
+  const [verifying, setVerifying] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -43,18 +44,14 @@ export default function LandingPage() {
     };
 
     checkAuth();
-
     return () => {
       cancelled = true;
     };
   }, [setUser, navigate]);
 
+  // ✅ Show your new Loader while verifying session
   if (verifying) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-black text-white">
-        Checking session...
-      </div>
-    );
+    return <Loader fullScreen size="w-20 h-20" />;
   }
 
   return (

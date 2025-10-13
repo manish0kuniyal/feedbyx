@@ -70,7 +70,7 @@ export default function GoogleSignInButton() {
   if (verifying) {
     return (
       <button disabled className="flex items-center gap-2 px-4 py-2 rounded bg-gray-200 text-gray-600">
-        Checking session...
+        Signing in...
       </button>
     );
   }

@@ -56,17 +56,17 @@ export default function SimpleFormBuilder() {
   const updateOptions = (id, newOptions) => {
     setFields((prev) => prev.map((f) => (f.id === id ? { ...f, options: newOptions } : f)));
   };
-  const addField = (fieldType) => {
-    const selected = fieldOptions.find((f) => f.type === fieldType);
-    let newField = { ...selected, id: Date.now().toString(), label: '' };
-    if (fieldType === 'radio') newField.options = ['Option 1', 'Option 2'];
-    if (fieldType === 'rating') newField.options = ['1', '2', '3', '4', '5'];
-    setFields((prev) => [...prev, newField]);
-    setShowFieldMenu(false);
+const addField = (fieldType) => {
+  const selected = fieldOptions.find((f) => f.type === fieldType);
+  let newField = { ...selected, id: Date.now().toString(), label: '' };
+  if (fieldType === 'radio') newField.options = ['Option 1', 'Option 2'];
+  if (fieldType === 'rating') newField.options = ['1', '2', '3', '4', '5'];
+  if (fieldType === 'email') newField.label = 'Email';
+  setFields((prev) => [...prev, newField]);
+  setShowFieldMenu(false);
+  contentControls.start({ scale: [1, 1.01, 1], transition: { duration: 0.28 } });
+};
 
-    // micro-pulse when new field added
-    contentControls.start({ scale: [1, 1.01, 1], transition: { duration: 0.28 } });
-  };
   const updateLabel = (id, newLabel) => setFields((prev) => prev.map((f) => (f.id === id ? { ...f, label: newLabel } : f)));
   const removeField = (id) => {
     setFields((prev) => prev.filter((f) => f.id !== id));

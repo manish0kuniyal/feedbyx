@@ -10,8 +10,8 @@ export default function Navbar() {
         <img
           src="/logo.png"
           alt="Feedbyx Logo"
-          width={120}
-          height={100}
+          width={80}
+          height={80}
           className="relative z-10 object-contain"
         />
       </div>

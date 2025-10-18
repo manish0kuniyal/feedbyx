@@ -144,7 +144,7 @@ export default function AdminDashboard() {
             Refresh
           </button>
 
-          <div className="flex items-center bg-white/5 rounded px-2">
+          {/* <div className="flex items-center bg-white/5 rounded px-2">
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -154,7 +154,7 @@ export default function AdminDashboard() {
             <button onClick={handleSearch} className="p-2">
               <FiSearch />
             </button>
-          </div>
+          </div> */}
         </div>
       </div>
 

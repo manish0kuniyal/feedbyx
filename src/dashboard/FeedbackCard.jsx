@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { FiMoreHorizontal, FiTrash2, FiExternalLink, FiPause } from "react-icons/fi";
 import { ImEmbed2 } from "react-icons/im";
+import { RxValueNone } from "react-icons/rx";
 import { motion, AnimatePresence } from "framer-motion";
 import { useThemeStore } from "../utils/themestore";
 import toast from "react-hot-toast";
@@ -32,7 +33,6 @@ export default function FeedbackCard({ form, setEmbedForm, setShareForm, onDelet
   const created = form.createdAt ? new Date(form.createdAt).toLocaleString() : "—";
   const idText = form.customId || form.id || "—";
 
-  // Helper to call PATCH /api/forms/:customId
   const patchForm = async (id, payload) => {
     const base = import.meta.env.VITE_BASE_URL || "/";
     const url = `${base.replace(/\/+$/, "")}/api/forms/${encodeURIComponent(id)}`;
@@ -45,10 +45,9 @@ export default function FeedbackCard({ form, setEmbedForm, setShareForm, onDelet
       const err = await res.json().catch(() => null);
       throw new Error(err?.error || `Request failed (${res.status})`);
     }
-    return await res.json(); // expects { message: "Form updated", form: {...} } per backend
+    return await res.json();
   };
 
-  // Delete (unchanged, keeps reload fallback)
   const handleDelete = async () => {
     setMenuOpen(false);
     const id = form.id || form.customId;
@@ -74,8 +73,6 @@ export default function FeedbackCard({ form, setEmbedForm, setShareForm, onDelet
       if (res.ok) {
         toast.success("Form and feedback deleted.");
         if (typeof onDelete === "function") onDelete(id);
-
-        // fallback reload if parent doesn't remove the card
         setTimeout(() => window.location.reload(), 700);
       } else {
         const err = await res.json().catch(() => null);
@@ -89,7 +86,6 @@ export default function FeedbackCard({ form, setEmbedForm, setShareForm, onDelet
     }
   };
 
-  // Toggle pause/unpause
   const handlePauseToggle = async () => {
     setMenuOpen(false);
     const id = form.id || form.customId;
@@ -103,7 +99,6 @@ export default function FeedbackCard({ form, setEmbedForm, setShareForm, onDelet
       setIsPausing(true);
       const resp = await patchForm(id, { paused: newPaused });
       toast.success(newPaused ? "Form paused — it will stop accepting feedback." : "Form unpaused — accepting feedback again.");
-      // If backend returns updated form, use it; otherwise update minimal fields
       const updated = resp?.form ? resp.form : { ...form, paused: newPaused };
       if (typeof onUpdate === "function") onUpdate(updated);
     } catch (err) {
@@ -114,7 +109,6 @@ export default function FeedbackCard({ form, setEmbedForm, setShareForm, onDelet
     }
   };
 
-  // Prompt for a new limit (empty to clear)
   const handleSetLimit = async () => {
     setMenuOpen(false);
     const id = form.id || form.customId;
@@ -123,11 +117,9 @@ export default function FeedbackCard({ form, setEmbedForm, setShareForm, onDelet
       return;
     }
 
-    // prompt current value as default
     const current = form.feedbackLimit == null ? "" : String(form.feedbackLimit);
     const raw = window.prompt("Set maximum number of feedbacks for this form.\nEnter a positive integer, or leave empty to clear the limit.", current);
 
-    // user cancelled
     if (raw === null) return;
 
     const trimmed = raw.trim();
@@ -135,7 +127,6 @@ export default function FeedbackCard({ form, setEmbedForm, setShareForm, onDelet
     if (trimmed === "") {
       payload = { feedbackLimit: null };
     } else {
-      // validate integer >= 0
       const n = Number(trimmed);
       if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0) {
         toast.error("Please enter a valid non-negative integer (or leave empty to clear).");
@@ -172,7 +163,6 @@ export default function FeedbackCard({ form, setEmbedForm, setShareForm, onDelet
         <div className="min-w-0">
           <h3 className="text-base sm:text-lg font-semibold truncate">{form.name || "Untitled form"}</h3>
 
-          {/* badges: paused + limit */}
           <div className="mt-1 flex items-center gap-2">
             {form.paused && (
               <div className={`text-xs px-2 py-0.5 rounded-full font-medium ${darkMode ? 'bg-white/6 text-gray-200' : 'bg-gray-100 text-gray-800'}`}>
@@ -231,8 +221,7 @@ export default function FeedbackCard({ form, setEmbedForm, setShareForm, onDelet
                   disabled={isSettingLimit}
                   className={`w-full text-left px-4 py-3 flex items-center gap-3 ${isSettingLimit ? 'opacity-60 cursor-not-allowed' : 'hover:bg-gray-50 hover:text-gray-700 dark:hover:bg-white/6'}`}
                 >
-                  {/* small icon-like text for clarity */}
-                  ⚙️ Set limit
+                  <RxValueNone /> Set limit
                 </button>
               </motion.div>
             )}

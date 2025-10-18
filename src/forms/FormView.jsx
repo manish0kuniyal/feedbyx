@@ -17,17 +17,18 @@ export default function FormView() {
   const [fieldValidity, setFieldValidity] = useState({});
   const [formValid, setFormValid] = useState(false);
 
-  // ---------- METADATA state ----------
   const [metadata, setMetadata] = useState({
-    utm: {},          // will hold utm_* and related params
+    utm: {},
     referrer: '',
     pageUrl: '',
     userAgent: '',
-    location: null,   // { lat, lng, accuracy } if allowed
-    clientTs: null    // optional client timestamp
+    location: null,
+    clientTs: null
   });
 
-  // fetch form
+  const [page, setPage] = useState(0);
+  const PAGE_SIZE = 10;
+
   useEffect(() => {
     if (!formId) return;
     (async () => {
@@ -37,15 +38,14 @@ export default function FormView() {
         if (!res.ok) throw new Error('Form not found');
         const data = await res.json();
         setForm(data);
+        setPage(0);
       } catch (err) {
         setError(err.message || 'Failed to load form');
       }
     })();
   }, [formId]);
 
-  // parse URL params, get referrer, userAgent, pageUrl and attempt geolocation
   useEffect(() => {
-    // parse URLSearchParams
     const params = new URLSearchParams(window.location.search);
     const utm = {};
     for (const [k, v] of params.entries()) {
@@ -64,8 +64,6 @@ export default function FormView() {
     };
 
     setMetadata(initialMeta);
-
-    // attempt browser geolocation (asks permission)
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -78,18 +76,15 @@ export default function FormView() {
             }
           }));
         },
-        (err) => {
-          // ignore failure; keep location null
-        },
+        () => {},
         { maximumAge: 1000 * 60 * 5, timeout: 5000 }
       );
     }
-  }, []); // run once on mount
+  }, []);
 
-  // sanitize + validate
   const sanitizeInput = (value, { maxLen = 2000 } = {}) => {
-    if (!value) return '';
-    return String(value).trim().slice(0, maxLen).replace(/<[^>]*>?/gm, '');
+    if (value == null) return '';
+    return String(value).slice(0, maxLen).replace(/<[^>]*>?/gm, '');
   };
 
   const validateField = (field, index) => {
@@ -120,7 +115,6 @@ export default function FormView() {
     return { ok: true };
   };
 
-  // recompute validity
   useEffect(() => {
     if (!form?.fieldType) {
       setFieldValidity({});
@@ -142,13 +136,13 @@ export default function FormView() {
     setFormValid(Boolean(allOk));
   }, [values, ratings, form]);
 
-  const handleChange = (field, index) => (e) => {
-    const key = field.label || `field-${index}`;
+  const handleChange = (field, globalIndex) => (e) => {
+    const key = field.label || `field-${globalIndex}`;
     setValues((prev) => ({ ...prev, [key]: sanitizeInput(e.target.value) }));
   };
 
-  const handleRadioChange = (field, index) => (e) => {
-    const key = field.label || `field-${index}`;
+  const handleRadioChange = (field, globalIndex) => (e) => {
+    const key = field.label || `field-${globalIndex}`;
     setValues((prev) => ({ ...prev, [key]: e.target.value }));
   };
 
@@ -157,10 +151,8 @@ export default function FormView() {
     setError('');
     if (!form) return;
 
-    // FINAL synchronous validation before submit
     const nextValidity = {};
     let ok = true;
-    // include metadata in payload
     const payload = { formId, formName: form.name, responses: {}, metadata };
 
     (form.fieldType || []).forEach((f, i) => {
@@ -169,12 +161,12 @@ export default function FormView() {
       nextValidity[key] = res;
       if (!res.ok) ok = false;
 
-      // collect normalized values when valid
       if (res.ok) {
         if ((f.type || '').toLowerCase() === 'rating') {
           payload.responses[key] = Number(ratings[i] ?? null);
         } else {
-          payload.responses[key] = res.normalizedValue ?? (values[key] ?? '');
+          const rawVal = values[key] ?? '';
+          payload.responses[key] = sanitizeInput(String(rawVal).trim());
         }
       }
     });
@@ -187,7 +179,6 @@ export default function FormView() {
       return;
     }
 
-    // submit
     try {
       setIsSubmitting(true);
       const res = await fetch(`${import.meta.env.VITE_BASE_URL}api/feedback`, {
@@ -201,19 +192,37 @@ export default function FormView() {
         throw new Error(text || 'Submission failed');
       }
 
-      setSuccessMsg('✅ Feedback submitted successfully!');
+      setSuccessMsg('Feedback submitted successfully!');
       setShowForm(false);
       setValues({});
       setRatings({});
     } catch (err) {
-      setError(err.message || 'Submission error');
+      let message = err.message || 'Submission error';
+      try {
+        const parsed = JSON.parse(message);
+        message = parsed.error || message;
+      } catch (_) {
+        if (message.includes('"error"')) {
+          const match = message.match(/"error"\s*:\s*"([^"]+)"/);
+          if (match) message = match[1];
+        }
+      }
+      setError(message);
+      setShowForm(false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (error) return <div className="p-6 text-red-400">{error}</div>;
   if (!form) return <div className="p-6 text-gray-300">Loading...</div>;
+
+  const totalFields = form.fieldType?.length || 0;
+  const pageCount = Math.max(1, Math.ceil(totalFields / PAGE_SIZE));
+  const safePage = Math.min(Math.max(0, page), pageCount - 1);
+  if (safePage !== page) setPage(safePage);
+  const start = safePage * PAGE_SIZE;
+  const end = Math.min(start + PAGE_SIZE, totalFields);
+  const visibleFields = (form.fieldType || []).slice(start, end);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black p-4">
@@ -229,8 +238,9 @@ export default function FormView() {
 
         {showForm ? (
           <form className="space-y-4" onSubmit={handleSubmit}>
-            {form.fieldType?.map((field, index) => {
-              const key = field.label || `field-${index}`;
+            {visibleFields.map((field, localIdx) => {
+              const globalIndex = start + localIdx;
+              const key = field.label || `field-${globalIndex}`;
               const validity = fieldValidity[key] ?? { ok: true };
               const val = values[key] || '';
 
@@ -240,12 +250,12 @@ export default function FormView() {
                 case 'email':
                 case 'number':
                   return (
-                    <div key={index}>
+                    <div key={globalIndex}>
                       <label className="block mb-1 font-medium text-gray-200">{key}</label>
                       <input
                         name={key}
                         value={val}
-                        onChange={handleChange(field, index)}
+                        onChange={handleChange(field, globalIndex)}
                         type={field.type === 'input' ? 'text' : field.type}
                         required={field.required}
                         className="w-full border border-[var(--lightblue)] bg-transparent text-white rounded p-2 outline-none"
@@ -258,12 +268,12 @@ export default function FormView() {
 
                 case 'textarea':
                   return (
-                    <div key={index}>
+                    <div key={globalIndex}>
                       <label className="block mb-1 font-medium text-gray-200">{key}</label>
                       <textarea
                         name={key}
                         value={val}
-                        onChange={handleChange(field, index)}
+                        onChange={handleChange(field, globalIndex)}
                         required={field.required}
                         className="w-full border border-[var(--lightblue)] bg-transparent text-white rounded p-2 outline-none"
                       />
@@ -275,7 +285,7 @@ export default function FormView() {
 
                 case 'radio':
                   return (
-                    <div key={index}>
+                    <div key={globalIndex}>
                       <p className="font-medium text-gray-200 mb-2">{key}</p>
                       <div className="flex flex-col gap-2">
                         {field.options?.map((opt, i) => (
@@ -285,7 +295,7 @@ export default function FormView() {
                               name={key}
                               value={opt}
                               checked={val === opt}
-                              onChange={handleRadioChange(field, index)}
+                              onChange={handleRadioChange(field, globalIndex)}
                               required={field.required}
                               className="accent-blue-500"
                             />
@@ -301,20 +311,16 @@ export default function FormView() {
 
                 case 'rating':
                   return (
-                    <div key={index}>
+                    <div key={globalIndex}>
                       <p className="font-medium text-gray-200 mb-2">{key}</p>
                       <div className="flex gap-2">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <span
                             key={star}
                             onClick={() =>
-                              setRatings((prev) => ({ ...prev, [index]: star }))
+                              setRatings((prev) => ({ ...prev, [globalIndex]: star }))
                             }
-                            className={`cursor-pointer text-2xl ${
-                              ratings[index] >= star
-                                ? 'text-yellow-400'
-                                : 'text-gray-600'
-                            }`}
+                            className={`cursor-pointer text-2xl ${ratings[globalIndex] >= star ? 'text-yellow-400' : 'text-gray-600'}`}
                           >
                             ★
                           </span>
@@ -328,31 +334,91 @@ export default function FormView() {
 
                 default:
                   return (
-                    <div key={index} className="text-red-400">
+                    <div key={globalIndex} className="text-red-400">
                       Unsupported field type: {field.type}
                     </div>
                   );
               }
             })}
 
-            {error && <p className="text-sm text-red-400">{error}</p>}
+{totalFields > PAGE_SIZE ? (
+  <div className="flex items-center justify-between mt-2">
+    <button
+      type="button"
+      onClick={() => setPage((p) => Math.max(0, p - 1))}
+      disabled={page <= 0}
+      className={`px-3 py-1 rounded ${page <= 0 ? 'opacity-50 cursor-not-allowed bg-gray-700' : 'bg-[var(--blue)] hover:bg-[var(--lightblue)]'}`}
+    >
+      Previous
+    </button>
 
-            <button
+    <div>
+      {page < pageCount - 1 ? (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setTimeout(() => setPage((p) => Math.min(pageCount - 1, p + 1)), 0);
+          }}
+          disabled={page >= pageCount - 1}
+          className={`px-3 py-1 rounded ${page >= pageCount - 1 ? 'opacity-50 cursor-not-allowed bg-gray-700' : 'bg-[var(--blue)] hover:bg-[var(--lightblue)]'}`}
+        >
+          Next
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!formValid) {
+              const ok = window.confirm('One or more required fields are empty. Are you sure you want to submit?');
+              if (!ok) return;
+            }
+            const submitBtn = document.querySelector('button[type="submit"].fb-real-submit');
+            if (submitBtn) submitBtn.click();
+          }}
+          disabled={isSubmitting}
+          className={`px-4 py-2 rounded font-semibold ${isSubmitting ? 'opacity-60 cursor-not-allowed bg-gray-600' : 'bg-[var(--blue)] hover:bg-[var(--lightblue)]'}`}
+        >
+          {isSubmitting ? 'Submitting...' : 'Submit'}
+        </button>
+      )}
+    </div>
+  </div>
+) : (
+  <button
+    type="submit"
+    disabled={!formValid || isSubmitting}
+    className={`w-full rounded px-4 py-2 font-semibold transition ${(!formValid || isSubmitting) ? 'opacity-60 cursor-not-allowed bg-gray-600' : 'bg-[var(--blue)] hover:bg-[var(--lightblue)]'}`}
+  >
+    {isSubmitting ? 'Submitting...' : 'Submit'}
+  </button>
+)}
+
+
+{error && <p className="text-center text-red-400 font-medium mt-4">{error}</p>}
+
+
+            {/* <button
               type="submit"
               disabled={!formValid || isSubmitting}
-              className={`w-full rounded px-4 py-2 font-semibold transition
-                ${(!formValid || isSubmitting)
-                  ? 'opacity-60 cursor-not-allowed bg-gray-600'
-                  : 'bg-[var(--blue)] hover:bg-[var(--lightblue)]'}`}
+              className={`w-full rounded px-4 py-2 font-semibold transition ${(!formValid || isSubmitting) ? 'opacity-60 cursor-not-allowed bg-gray-600' : 'bg-[var(--blue)] hover:bg-[var(--lightblue)]'}`}
             >
               {isSubmitting ? 'Submitting...' : 'Submit'}
-            </button>
+            </button> */}
           </form>
         ) : (
           <div className="text-center">
-            <p className="text-green-400">{successMsg}</p>
+            {successMsg ? (
+              <p className="text-green-400 font-medium">{successMsg}</p>
+            ) : (
+              <p className="text-red-400 font-medium">{error}</p>
+            )}
             <button
               onClick={() => {
+                setError('');
                 setSuccessMsg('');
                 setShowForm(true);
               }}

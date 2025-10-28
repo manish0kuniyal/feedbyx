@@ -12,7 +12,7 @@ export default function Loader({ fullScreen = false, size = "w-30 h-30" }) {
   return (
     <div
       className={`fixed inset-0 flex items-center justify-center ${
-        fullScreen ? "bg-black/40 backdrop-blur-sm z-50" : "bg-transparent"
+        fullScreen ? "bg-black backdrop-blur-sm z-50" : "bg-transparent"
       }`}
     >
       {logo}

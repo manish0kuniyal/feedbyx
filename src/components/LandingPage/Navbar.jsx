@@ -5,7 +5,7 @@ export default function Navbar() {
   return (
     <header className="relative flex items-center justify-between w-full max-w-6xl mx-auto py-6 px-4 md:px-0 z-10">
       <div className="relative flex items-center">
-        <div className="absolute -top-10 -left-9 w-40 h-40 bg-[#dae6dd] opacity-70 blur-[110px] rounded-full pointer-events-none" />
+        <div className="absolute -top-10 -left-9 w-50 h-50 bg-[#dae6dd] opacity-70 blur-[150px] rounded-full pointer-events-none" />
 
         <img
           src="/logo.png"

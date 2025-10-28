@@ -3,6 +3,7 @@ import Dashboard from './dashboard/Dashboard';
 import LandingPage from './components/LandingPage/LandingPage';
 import NotFound from './components/NotFound';
 import FormView from './forms/FormView';
+import Payment from './Payment';
 function App() {
   return (
       <Routes>
@@ -10,6 +11,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/forms/:formId" element={<FormView />} /> 
         <Route path="*" element={<NotFound />} />
+        <Route path="/pay" element={<Payment />} />
+     
       </Routes>
   
   );

@@ -1,37 +1,27 @@
 "use client";
 import { motion } from "framer-motion";
-import { FaClipboardList, FaCode, FaChartBar} from "react-icons/fa";
+import { FaChartBar, FaCode, FaWpforms } from "react-icons/fa";
+import { FaWandMagicSparkles } from "react-icons/fa6";
 
 export default function HowItWorks() {
-  const cards = [
-  {
-    icon: <FaClipboardList className="w-6 h-6 text-white" />,
-    title: "Create a Custom Form",
-    description: "Build a form tailored to your needs with our easy-to-use editor and customization options.",
-    bgColor: "bg-blue-600",
-  },
-  {
-    icon: <FaCode className="w-6 h-6 text-white" />,
-    title: "Embed into Your Code",
-    description: "Easily integrate the form into your HTML or application with a simple embed code snippet.",
-    bgColor: "bg-pink-600",
-  },
-  {
-    icon: <FaChartBar className="w-6 h-6 text-white" />,
-    title: "Share & Track Analytics",
-    description: "Distribute your form and monitor performance with detailed real-time analytics.",
-    bgColor: "bg-green-600",
-  },
-];
-
+  const getDirection = (direction) => {
+    switch (direction) {
+      case "left":
+        return { hidden: { opacity: 0, x: -100 }, visible: { opacity: 1, x: 0 } };
+      case "right":
+        return { hidden: { opacity: 0, x: 100 }, visible: { opacity: 1, x: 0 } };
+      case "top":
+        return { hidden: { opacity: 0, y: -100 }, visible: { opacity: 1, y: 0 } };
+      default:
+        return { hidden: { opacity: 0 }, visible: { opacity: 1 } };
+    }
+  };
 
   return (
-    <section className="py-20 mt-14">
-      <div className="max-w-6xl mx-auto px-6 text-center bg-transparent">
-        
-        {/* Heading */}
+    <section className="relative py-28 overflow-hidden text-white">
+      <div className="max-w-6xl mx-auto px-6">
         <motion.h2
-          className="text-4xl md:text-4xl font-bold mb-2 text-white"
+          className="text-5xl md:text-6xl font-bold mb-4 text-center"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
@@ -41,46 +31,107 @@ export default function HowItWorks() {
         </motion.h2>
 
         <motion.p
-          className="text-sm text-[var(--blue)] mb-12 mt-4 font-semibold max-w-md mx-auto"
+          className="text-base text-gray-400 mb-16 font-medium max-w-lg mx-auto text-center leading-relaxed"
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
           viewport={{ once: true }}
         >
-         Supercharge your feedback collection process with APPNAME
-
-
+          Supercharge your workflow with{" "}
+          <span className="text-[var(--blue)] font-bold">feedbyx</span> — the modern AI form builder.
         </motion.p>
 
-        {/* Cards with smooth scale + fade, left → right */}
-        <div className="grid gap-10 md:grid-cols-3">
-          {cards.map((card, idx) => (
+        <div className="grid gap-8">
           <motion.div
-  key={idx}
-  initial={{ opacity: 0, scale: 0.95 }}
-  whileInView={{ opacity: 1, scale: 1 }}
-  transition={{
-    delay: 0.5 + idx * 0.4,
-    duration: 0.8,
-    ease: [0.25, 0.1, 0.25, 1]
-  }}
-  viewport={{ once: true }}
-  className="bg-white/0 rounded-3xl p-8 shadow-lg hover:shadow-2xl transition relative backdrop-blur-3xl border border-white/20
-             before:absolute before:inset-0 before:rounded-3xl before:border-[1px] before:border-white/40 
-             before:shadow-[0_0_2px_rgba(255,255,255,0.5)] before:pointer-events-none
-             after:absolute after:inset-0 after:rounded-3xl after:shadow-[0_0_25px_rgba(255,255,255,0.2)] after:pointer-events-none"
->
-  <div className="flex justify-center">
-    <div className={`${card.bgColor} w-12 h-12 rounded-xl flex items-center justify-center shadow-md mb-6`}>
-      {card.icon}
-    </div>
+            variants={getDirection("top")}
+            initial="hidden"
+            whileInView="visible"
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            viewport={{ once: true }}
+            className="relative p-10 md:p-12 border border-white/5 rounded-3xl backdrop-blur-xl bg-white/1  flex flex-col md:flex-row items-center justify-between min-h-[260px]"
+          >
+            <div className="absolute -top-10 -left-10 w-60 h-60 bg-blue-400/20 blur-[120px] rounded-full pointer-events-none"></div>
+            <div className="relative z-10 text-left max-w-xl">
+              <h3 className="font-semibold text-2xl mb-2">Create a Custom Form</h3>
+              <p className="text-sm text-gray-300 leading-relaxed">
+                Build beautiful forms in minutes with our drag-and-drop editor and AI-powered customization.
+              </p>
+            </div>
+            <div className="relative z-10 flex justify-end mt-6 md:mt-0">
+              <div className="w-20 h-20 flex items-center justify-center rounded-2xl bg-white/5 backdrop-blur-xl shadow-inner">
+                <FaWpforms className="w-10 h-10 text-blue-300" />
+              </div>
+            </div>
+          </motion.div>
+
+         <div className="grid gap-8 md:grid-cols-[1fr_2fr] md:items-stretch">
+  <div className="grid grid-rows-2 gap-6">
+    <motion.div
+      variants={getDirection("left")}
+      initial="hidden"
+      whileInView="visible"
+      transition={{ duration: 0.8, ease: "easeOut" }}
+      viewport={{ once: true }}
+      className="relative p-8 border border-white/5 rounded-3xl backdrop-blur-xl bg-white/1  flex flex-col items-center justify-center text-center"
+    >
+      <div className="relative z-10 mb-4">
+        <div className="w-16 h-16 flex items-center justify-center rounded-2xl bg-white/3 shadow-inner">
+          <FaCode className="w-8 h-8 text-pink-300" />
+        </div>
+      </div>
+      <div className="relative z-10">
+        <h3 className="font-semibold text-lg mb-2">Embed into Your Code</h3>
+        <p className="text-sm text-gray-300 leading-relaxed max-w-sm mx-auto">
+          Integrate effortlessly into your site or app using a lightweight embed snippet.
+        </p>
+      </div>
+    </motion.div>
+
+    <motion.div
+      variants={getDirection("left")}
+      initial="hidden"
+      whileInView="visible"
+      transition={{ delay: 0.1, duration: 0.8, ease: "easeOut" }}
+      viewport={{ once: true }}
+      className="relative p-8 border border-white/5 rounded-3xl backdrop-blur-xl bg-white/1  flex flex-col items-center justify-center text-center"
+    >
+      <div className="relative z-10 mb-4">
+        <div className="w-16 h-16 flex items-center justify-center rounded-2xl bg-white/4 shadow-inner">
+          <FaWandMagicSparkles className="w-8 h-8 text-purple-300" />
+        </div>
+      </div>
+      <div className="relative z-10">
+        <h3 className="font-semibold text-lg mb-2">Ask AI for Insights</h3>
+        <p className="text-sm text-gray-300 leading-relaxed max-w-sm mx-auto">
+          Go beyond charts — ask AI questions about your responses and uncover insights instantly.
+        </p>
+      </div>
+    </motion.div>
   </div>
-  <h3 className="font-semibold text-lg mb-2 text-white text-center">{card.title}</h3>
-  <p className="text-sm text-gray-300 text-center">{card.description}</p>
-</motion.div>
 
+  <motion.div
+    variants={getDirection("right")}
+    initial="hidden"
+    whileInView="visible"
+    transition={{ duration: 0.8, ease: "easeOut" }}
+    viewport={{ once: true }}
+    className="relative p-10 border border-white/5 rounded-3xl backdrop-blur-xl bg-white/1 flex flex-col items-center justify-center text-center"
+  >
+    <div className="absolute -bottom-10 -left-10 w-72 h-72 bg-green-400/10 blur-[120px] rounded-full pointer-events-none"></div>
+    <div className="relative z-10 mb-6">
+      <div className="w-20 h-20 flex items-center justify-center rounded-2xl bg-white/4 shadow-inner">
+        <FaChartBar className="w-10 h-10 text-green-300" />
+      </div>
+    </div>
+    <div className="relative z-10">
+      <h3 className="font-semibold text-xl mb-2">Share & Track Analytics</h3>
+      <p className="text-sm text-gray-300 leading-relaxed max-w-sm mx-auto">
+        Monitor engagement, analyze trends, and get insights from your collected responses in real time.
+      </p>
+    </div>
+  </motion.div>
+</div>
 
-          ))}
         </div>
       </div>
     </section>

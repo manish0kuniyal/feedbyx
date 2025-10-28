@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useThemeStore } from '../../utils/themestore';
-import toast from 'react-hot-toast';
 import { FiChevronRight, FiChevronLeft, FiCheck } from 'react-icons/fi';
 import { MdOutlineMail } from "react-icons/md";
 import { IoMdRadioButtonOn } from "react-icons/io";
@@ -9,6 +8,10 @@ import { IoTextSharp } from "react-icons/io5";
 import { FaStarHalfStroke, FaTrash } from "react-icons/fa6";
 import { RiArrowDropDownLine, RiArrowDropUpLine } from "react-icons/ri";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
+
+import { Alert } from '@heroui/alert';
+import { RxCrossCircled } from "react-icons/rx";
+import { CiCircleCheck } from "react-icons/ci";
 
 import InputField from './FormComponents/InputField';
 import TextAreaField from './FormComponents/TextAreaField';
@@ -38,34 +41,33 @@ const fieldCardVariants = {
 };
 
 export default function SimpleFormBuilder() {
-  // 1 = Name, 2 = Form (fields), 3 = Create
   const [step, setStep] = useState(1);
   const [formName, setFormName] = useState('');
   const [fields, setFields] = useState([]);
   const [showFieldMenu, setShowFieldMenu] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  const [alert, setAlert] = useState({ show: false, title: '', description: '', color: 'success' });
+
   const darkMode = useThemeStore((s) => s.darkMode);
   const user = useUserStore((s) => s.user);
   const uid = user?.userId || null;
 
-  // controls for subtle pulse animation on content when step changes
   const contentControls = useAnimation();
 
-  // field helpers
   const updateOptions = (id, newOptions) => {
     setFields((prev) => prev.map((f) => (f.id === id ? { ...f, options: newOptions } : f)));
   };
-const addField = (fieldType) => {
-  const selected = fieldOptions.find((f) => f.type === fieldType);
-  let newField = { ...selected, id: Date.now().toString(), label: '' };
-  if (fieldType === 'radio') newField.options = ['Option 1', 'Option 2'];
-  if (fieldType === 'rating') newField.options = ['1', '2', '3', '4', '5'];
-  if (fieldType === 'email') newField.label = 'Email';
-  setFields((prev) => [...prev, newField]);
-  setShowFieldMenu(false);
-  contentControls.start({ scale: [1, 1.01, 1], transition: { duration: 0.28 } });
-};
+  const addField = (fieldType) => {
+    const selected = fieldOptions.find((f) => f.type === fieldType);
+    let newField = { ...selected, id: Date.now().toString(), label: '' };
+    if (fieldType === 'radio') newField.options = ['Option 1', 'Option 2'];
+    if (fieldType === 'rating') newField.options = ['1', '2', '3', '4', '5'];
+    if (fieldType === 'email') newField.label = 'Email';
+    setFields((prev) => [...prev, newField]);
+    setShowFieldMenu(false);
+    contentControls.start({ scale: [1, 1.01, 1], transition: { duration: 0.28 } });
+  };
 
   const updateLabel = (id, newLabel) => setFields((prev) => prev.map((f) => (f.id === id ? { ...f, label: newLabel } : f)));
   const removeField = (id) => {
@@ -73,14 +75,13 @@ const addField = (fieldType) => {
     contentControls.start({ scale: [1, 0.995, 1], transition: { duration: 0.2 } });
   };
 
-  // save handler (Create)
   const handleSaveForm = async () => {
     if (!formName.trim()) {
-      toast.error('Enter the form name first');
+      setAlert({ show: true, title: 'Missing name', description: 'Enter the form name first', color: 'danger' });
       return;
     }
     if (fields.length === 0) {
-      toast.error('Please add at least one field before saving.');
+      setAlert({ show: true, title: 'No fields', description: 'Please add at least one field before saving.', color: 'danger' });
       return;
     }
 
@@ -93,19 +94,19 @@ const addField = (fieldType) => {
       });
       if (!res.ok) throw new Error(`Server error: ${res.statusText}`);
 
-      toast.success('✅ Your form is ready — go to the Forms tab to see it.');
-      setTimeout(() => {
-        window.location.href = '/dashboard';
-      }, 900);
+      setAlert({ show: true, title: 'Form created successfully', description: 'Your form is ready — go to the Forms tab to view it.', color: 'success' });
+    setTimeout(() => {
+    setAlert(prev => ({ ...prev, show: false }));
+    window.location.reload();
+  }, 2000);
     } catch (e) {
       console.error(e);
-      toast.error('Failed to save form.');
+      setAlert({ show: true, title: 'Save failed', description: 'Failed to save form.', color: 'danger' });
     } finally {
       setIsSaving(false);
     }
   };
 
-  // step guards
   const canGoNextFrom1 = formName.trim().length > 0;
   const canGoNextFrom2 = fields.length > 0;
   const next = () => {
@@ -113,7 +114,6 @@ const addField = (fieldType) => {
     if (step === 2 && !canGoNextFrom2) return;
     const newStep = Math.min(3, step + 1);
     setStep(newStep);
-    // small entrance animation for content
     contentControls.start({ opacity: [0, 1], y: [8, 0], transition: { duration: 0.25 } });
   };
   const back = () => {
@@ -122,7 +122,6 @@ const addField = (fieldType) => {
     contentControls.start({ opacity: [0, 1], y: [8, 0], transition: { duration: 0.25 } });
   };
 
-  // render specific field component
   const renderField = (f) => {
     const common = { label: f.label, onLabelChange: (val) => updateLabel(f.id, val) };
     switch (f.type) {
@@ -141,14 +140,10 @@ const addField = (fieldType) => {
       default: return null;
     }
   };
-
-  // styles
   const container = `max-w-4xl mx-auto p-6 min-h-screen transition-colors duration-300 ${darkMode ? ' text-gray-100' : 'text-gray-900'}`;
   const card = `rounded-2xl transition-colors duration-300 ${darkMode ? 'bg-transparent' : 'bg-transparent'}`;
 
-  // simplified StepDot (no numbers) with motion
   const StepDot = ({ title, active, done, index }) => {
-    // compute connector fill percentage for animation guidance (used below)
     return (
       <div className="flex items-center gap-3">
         <motion.div
@@ -166,7 +161,6 @@ const addField = (fieldType) => {
     );
   };
 
-  // compute how much of connector line should be "filled" based on step (0..1)
   const connectorProgress = (() => {
     if (step === 1) return 0;
     if (step === 2) return 0.5;
@@ -181,6 +175,47 @@ const addField = (fieldType) => {
       transition={{ duration: 0.32 }}
       className={container}
     >
+      <div className="mb-4">
+      <AnimatePresence>
+  {alert.show && (
+    <motion.div
+      initial={{ opacity: 0, x: 120 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 120 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="fixed top-6 right-6 z-50"
+    >
+      <Alert
+        variant="solid"
+        className={`flex items-start gap-3 w-[28rem] rounded-xl p-5 shadow-2xl transition-colors
+          ${darkMode
+            ? alert.color === 'danger'
+              ? 'bg-[#2c1a1a] text-red-300'
+              : 'bg-[#2e2c2c] text-emerald-100'
+            : alert.color === 'danger'
+              ? 'bg-red-50 text-red-800'
+              : 'bg-emerald-50 text-emerald-800'}
+        `}
+      >
+        <div className="flex items-start gap-3">
+          {alert.color === 'danger' ? (
+            <RxCrossCircled className="text-2xl flex-shrink-0 text-red-500 dark:text-red-400" />
+          ) : (
+            <CiCircleCheck className="text-2xl flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
+          )}
+          <div>
+            <h4 className="font-semibold text-base mb-1">
+              {alert.title}
+            </h4>
+            <p className="text-sm opacity-90">{alert.description}</p>
+          </div>
+        </div>
+      </Alert>
+    </motion.div>
+  )}
+</AnimatePresence>
+      </div>
+
       {/* Timeline: Name -> Form -> Create (minimal, no bg/border) */}
       <div className={`${card} p-3 mb-6`}>
         <div className="flex items-center gap-4">

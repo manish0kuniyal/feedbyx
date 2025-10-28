@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { FaPlus, FaMinus } from "react-icons/fa";
 
 export default function FAQSection() {
@@ -23,9 +24,8 @@ export default function FAQSection() {
         "Absolutely. We use industry-standard encryption and never share your information with third parties."
     },
     {
-      question: "Can I host the feedback form?",
-      answer:
-        "Currently there is no feature to get a shareable link for your form. It will be added soon."
+      question: "Can I share my form with others?",
+      answer: "Yes, you can easily create and share your forms using a link."
     }
   ];
 
@@ -34,38 +34,80 @@ export default function FAQSection() {
   };
 
   return (
-    <section className="py-16 px-4 sm:px-8 max-w-4xl mx-auto">
-      <h2 className="text-4xl font-bold text-center mb-12">
-        Frequently Asked Questions
-      </h2>
+    <section className="relative py-28 overflow-hidden text-white">
+      <div className="max-w-4xl mx-auto px-6">
+        <motion.h2
+          className="text-4xl md:text-5xl font-bold mb-3 text-center"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+        >
+          Frequently Asked Questions
+        </motion.h2>
 
-      <div className="space-y-4">
-        {faqs.map((faq, index) => (
-          <div
-            key={index}
-            className="bg-black border border-white rounded-xl overflow-hidden"
-          >
-            {/* Question Row */}
-            <button
-              onClick={() => toggleFAQ(index)}
-              className="w-full flex justify-between items-center p-6 text-left"
+        <motion.p
+          className="text-base text-gray-400 mb-16 font-medium max-w-lg mx-auto text-center leading-relaxed"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.8 }}
+          viewport={{ once: true }}
+        >
+          Everything you need to know about{" "}
+          <span className="text-white font-semibold">FEEDBYX</span>.
+        </motion.p>
+
+        <div className="space-y-8">
+          {faqs.map((faq, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: index * 0.1, duration: 0.6, ease: "easeOut" }}
+              viewport={{ once: true }}
+              className={`relative border border-white/10 rounded-3xl backdrop-blur-2xl bg-white/5 p-6 overflow-hidden transition-all duration-300 ${
+                openIndex === index
+                  ? "bg-white/10 shadow-lg shadow-blue-500/10"
+                  : "hover:bg-white/7"
+              }`}
             >
-              <span className="text-lg font-medium text-white">{faq.question}</span>
-              {openIndex === index ? (
-                <FaMinus className="text-white" />
-              ) : (
-                <FaPlus className="text-white" />
-              )}
-            </button>
+              {/* Blob behind each card */}
+              <div
+                className={`absolute ${
+                  index % 2 === 0
+                    ? "-top-10 -left-10 bg-white/2"
+                    : "-bottom-10 -right-10 bg-blue-300/10"
+                } w-60 h-60 blur-[100px] rounded-full pointer-events-none`}
+              ></div>
 
-            {/* Answer Row */}
-            {openIndex === index && (
-              <div className="px-6 pb-6 text-gray-300 text-left">
-                {faq.answer}
+              {/* Content */}
+              <div className="relative z-10">
+                <button
+                  onClick={() => toggleFAQ(index)}
+                  className="w-full flex justify-between items-center text-left"
+                >
+                  <span className="text-lg font-semibold">{faq.question}</span>
+                  {openIndex === index ? (
+                    <FaMinus className="text-blue-300" />
+                  ) : (
+                    <FaPlus className="text-gray-400" />
+                  )}
+                </button>
+
+                {openIndex === index && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="mt-4 text-gray-300 text-left text-sm leading-relaxed"
+                  >
+                    {faq.answer}
+                  </motion.div>
+                )}
               </div>
-            )}
-          </div>
-        ))}
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

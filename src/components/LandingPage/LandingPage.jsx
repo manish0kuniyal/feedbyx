@@ -49,7 +49,6 @@ export default function LandingPage() {
     };
   }, [setUser, navigate]);
 
-  // ✅ Show your new Loader while verifying session
   if (verifying) {
     return <Loader fullScreen size="w-20 h-20" />;
   }

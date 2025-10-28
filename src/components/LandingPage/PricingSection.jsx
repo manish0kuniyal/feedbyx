@@ -2,43 +2,112 @@
 import { motion } from "framer-motion";
 
 const plans = [
-  { name: "Basic", price: "$9/mo", features: ["Feature A", "Feature B"] },
-  { name: "Pro", price: "$29/mo", features: ["Feature A", "Feature B", "Feature C"] },
-  { name: "Enterprise", price: "$99/mo", features: ["All Features", "Priority Support"] },
+  {
+    name: "Free",
+    price: "$0/mo",
+    features: [
+      "Create up to 2 forms",
+      "30 responses per form",
+      "Basic analytics dashboard",
+    ],
+    color: "from-blue-400/3 to-blue-500/1",
+    glow: "bg-blue-400/10",
+  },
+  {
+    name: "Pro",
+    price: "$19/mo",
+    features: [
+      "Create up to 4 forms",
+      "100 responses per form",
+      "AI chatbot (5 queries total)",
+      "Advanced insights & analytics",
+    ],
+    color: "from-purple-400/3 to-purple-500/1",
+    glow: "bg-purple-400/10",
+    popular: true,
+  },
+  {
+    name: "Enterprise",
+    price: "Contact Us",
+    features: [
+      "Unlimited forms & responses",
+      "Full AI access without limits",
+      "Team collaboration & API access",
+      "Dedicated success manager",
+    ],
+    color: "from-green-400/3 to-green-500/1",
+    glow: "bg-green-400/10",
+  },
 ];
 
 export default function PricingSection() {
   return (
-  <section className="py-16 px-4 sm:px-8 bg-transparent">
-  <h2 className="text-3xl font-bold text-center mb-12">Pricing Plans</h2>
-  
-  <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-    {plans.map((plan, idx) => (
-      <motion.div
-        key={idx}
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: idx * 0.2 }}
-        className="flex flex-col justify-between p-6 rounded-2xl 
-                   bg-gradient-to-b from-gray-950 via-gray-900 to-gray-800
-                   bg-opacity-80 backdrop-blur-lg 
-                   hover:shadow-lg transition"
-      >
-        <h3 className="text-xl font-semibold mb-4">{plan.name}</h3>
-        <p className="text-2xl font-bold mb-6">{plan.price}</p>
-        <ul className="flex-1 mb-6 text-gray-300 space-y-2">
-          {plan.features.map((f, i) => (
-            <li key={i}>✔ {f}</li>
+    <section className="relative py-14 overflow-hidden text-white">
+      <div className="max-w-6xl mx-auto px-6">
+        <motion.h2
+          className="text-5xl md:text-6xl font-bold mb-4 text-center"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          viewport={{ once: true }}
+        >
+          Pricing Plans
+        </motion.h2>
+
+        <motion.p
+          className="text-base text-gray-400 mb-16 font-medium max-w-lg mx-auto text-center leading-relaxed"
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+          viewport={{ once: true }}
+        >
+          Start free and scale as your needs grow with{" "}
+          <span className="text-[var(--blue)] font-semibold">feedbyx</span>.
+        </motion.p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          {plans.map((plan, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ delay: idx * 0.15, duration: 0.8, ease: "easeOut" }}
+              viewport={{ once: true }}
+              className={`relative border border-white/10 rounded-3xl backdrop-blur-2xl bg-gradient-to-b ${plan.color} p-10 flex flex-col items-center justify-between text-center overflow-hidden min-h-[420px] hover:bg-white/10 transition duration-300`}
+            >
+              <div
+                className={`absolute -top-16 -right-16 w-72 h-72 ${plan.glow} blur-[130px] rounded-full pointer-events-none`}
+              ></div>
+
+              {plan.popular && (
+                <div className="absolute top-5 right-5 bg-[var(--blue)] text-white text-xs font-semibold px-3 py-1 rounded-full">
+                  Most Popular
+                </div>
+              )}
+
+              <div className="relative z-10">
+                <h3 className="text-2xl font-semibold mb-2">{plan.name}</h3>
+                <p className="text-4xl font-bold mb-8 text-white">{plan.price}</p>
+                <ul className="text-gray-300 space-y-3 mb-8">
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="flex items-center justify-center gap-2">
+                      <span className="text-[var(--blue)]">✔</span> {feature}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className="relative z-10 w-full py-3 rounded-xl bg-[var(--blue)] text-white font-semibold hover:opacity-90 transition"
+              >
+                {plan.name === "Enterprise" ? "Contact Sales" : "Choose Plan"}
+              </motion.button>
+            </motion.div>
           ))}
-        </ul>
-        <button className="bg-[var(--blue)] text-white px-6 py-3 rounded-lg hover:opacity-90 w-full">
-          Choose Plan
-        </button>
-      </motion.div>
-    ))}
-  </div>
-</section>
-
-
+        </div>
+      </div>
+    </section>
   );
 }

@@ -10,13 +10,14 @@ export default function Navbar() {
         <img
           src="/logo.png"
           alt="Feedbyx Logo"
-          width={80}
-          height={80}
+          width={60}
+          height={60}
           className="relative z-10 object-contain"
         />
       </div>
       <div className="flex items-center gap-4">
-        <GoogleSignInButton />
+        <GoogleSignInButton label="Sign up" variant="secondary" />
+
       </div>
     </header>
   );

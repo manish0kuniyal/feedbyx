@@ -71,7 +71,6 @@ export default function FAQSection() {
                   : "hover:bg-white/7"
               }`}
             >
-              {/* Blob behind each card */}
               <div
                 className={`absolute ${
                   index % 2 === 0
@@ -80,7 +79,6 @@ export default function FAQSection() {
                 } w-60 h-60 blur-[100px] rounded-full pointer-events-none`}
               ></div>
 
-              {/* Content */}
               <div className="relative z-10">
                 <button
                   onClick={() => toggleFAQ(index)}

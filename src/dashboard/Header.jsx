@@ -24,7 +24,6 @@ export default function Header({ user, setUser, sidebarOpen, toggleSidebar }) {
 
   return (
     <div className="flex justify-between items-center gap-4 mb-6 pb-4">
-      {/* Left side: Hamburger + Greeting */}
       <div className="flex items-center gap-3">
         <button
           onClick={toggleSidebar}
@@ -36,8 +35,6 @@ export default function Header({ user, setUser, sidebarOpen, toggleSidebar }) {
           {user?.name ? `Hello ${user.name} 👋` : 'Welcome!'}
         </div>
       </div>
-
-      {/* Right side: Actions */}
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/admin')}

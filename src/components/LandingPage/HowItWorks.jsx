@@ -42,27 +42,32 @@ export default function HowItWorks() {
         </motion.p>
 
         <div className="grid gap-8">
-          <motion.div
-            variants={getDirection("top")}
-            initial="hidden"
-            whileInView="visible"
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            viewport={{ once: true }}
-            className="relative p-10 md:p-12 border border-white/5 rounded-3xl backdrop-blur-xl bg-white/1  flex flex-col md:flex-row items-center justify-between min-h-[260px]"
-          >
-            <div className="absolute -top-10 -left-10 w-60 h-60 bg-blue-400/20 blur-[120px] rounded-full pointer-events-none"></div>
-            <div className="relative z-10 text-left max-w-xl">
-              <h3 className="font-semibold text-2xl mb-2">Create a Custom Form</h3>
-              <p className="text-sm text-gray-300 leading-relaxed">
-                Build beautiful forms in minutes with our drag-and-drop editor and AI-powered customization.
-              </p>
-            </div>
-            <div className="relative z-10 flex justify-end mt-6 md:mt-0">
-              <div className="w-20 h-20 flex items-center justify-center rounded-2xl bg-white/5 backdrop-blur-xl shadow-inner">
-                <FaWpforms className="w-10 h-10 text-blue-300" />
-              </div>
-            </div>
-          </motion.div>
+   <motion.div
+  variants={getDirection("top")}
+  initial="hidden"
+  whileInView="visible"
+  transition={{ duration: 0.8, ease: "easeOut" }}
+  viewport={{ once: true }}
+  className="relative p-10 md:p-12 border border-white/5 rounded-3xl backdrop-blur-xl bg-white/1 
+             flex flex-col lg:flex-row items-center lg:items-center justify-center lg:justify-between 
+             text-center lg:text-left min-h-[260px]"
+>
+  <div className="absolute -top-10 -left-10 w-60 h-60 bg-blue-400/20 blur-[120px] rounded-full pointer-events-none"></div>
+
+  <div className="relative z-10 mb-6 lg:mb-0 lg:order-2">
+    <div className="w-20 h-20 flex items-center justify-center rounded-2xl bg-white/5 backdrop-blur-xl shadow-inner">
+      <FaWpforms className="w-10 h-10 text-blue-300" />
+    </div>
+  </div>
+
+  <div className="relative z-10 max-w-xl lg:max-w-md">
+    <h3 className="font-semibold text-2xl mb-2">Create a Custom Form</h3>
+    <p className="text-sm text-gray-300 leading-relaxed">
+      Build beautiful forms in minutes with our drag-and-drop editor and AI-powered customization.
+    </p>
+  </div>
+</motion.div>
+
 
          <div className="grid gap-8 md:grid-cols-[1fr_2fr] md:items-stretch">
   <div className="grid grid-rows-2 gap-6">

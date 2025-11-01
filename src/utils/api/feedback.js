@@ -39,9 +39,6 @@ export async function searchFeedbacks(baseUrl, query) {
   }
 }
 
-
-// utils/api/feedback.js
-
 export async function submitFeedback(baseUrl, payload) {
   try {
     const res = await fetch(`${baseUrl}api/feedback`, {

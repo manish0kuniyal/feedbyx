@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { fetchFormById } from "../utils/api/form";
 import { submitFeedback } from "../utils/api/feedback";
 
@@ -17,6 +17,7 @@ export default function FormView() {
   const [formValid, setFormValid] = useState(false);
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 10;
+  const startTimeRef = useRef(Date.now());
 
   const [metadata, setMetadata] = useState({
     utm: {},
@@ -26,6 +27,15 @@ export default function FormView() {
     location: null,
     clientTs: null,
   });
+
+  useEffect(() => {
+    if (!formId) return;
+    const viewedKey = `viewed_${formId}`;
+    if (!localStorage.getItem(viewedKey)) {
+      fetch(`${baseUrl}api/forms/${formId}/view`, { method: "POST" }).catch(console.error);
+      localStorage.setItem(viewedKey, "1");
+    }
+  }, [formId, baseUrl]);
 
   useEffect(() => {
     if (!formId) return;
@@ -83,11 +93,15 @@ export default function FormView() {
     const type = (field.type || "").toLowerCase();
     const val = values[key];
     if (field.required) {
-      if (type === "rating" && (!ratings[index] || ratings[index] < 1)) return { ok: false, msg: "Required" };
-      if (type !== "rating" && (!val || String(val).trim() === "")) return { ok: false, msg: "Required" };
+      if (type === "rating" && (!ratings[index] || ratings[index] < 1))
+        return { ok: false, msg: "Required" };
+      if (type !== "rating" && (!val || String(val).trim() === ""))
+        return { ok: false, msg: "Required" };
     }
-    if (type === "email" && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return { ok: false, msg: "Invalid email" };
-    if (type === "number" && val && Number.isNaN(Number(val))) return { ok: false, msg: "Must be a number" };
+    if (type === "email" && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val))
+      return { ok: false, msg: "Invalid email" };
+    if (type === "number" && val && Number.isNaN(Number(val)))
+      return { ok: false, msg: "Must be a number" };
     return { ok: true };
   };
 
@@ -145,6 +159,8 @@ export default function FormView() {
 
     try {
       setIsSubmitting(true);
+      const duration = Math.floor((Date.now() - startTimeRef.current) / 1000);
+      payload.metadata.timeOnPage = duration;
       await submitFeedback(baseUrl, payload);
       setSuccessMsg("Feedback submitted successfully!");
       setShowForm(false);
@@ -204,7 +220,9 @@ export default function FormView() {
                         required={field.required}
                         className="w-full border border-[var(--lightblue)] bg-transparent text-white rounded p-2 outline-none"
                       />
-                      {!validity.ok && <p className="text-xs text-red-400 mt-1">{validity.msg}</p>}
+                      {!validity.ok && (
+                        <p className="text-xs text-red-400 mt-1">{validity.msg}</p>
+                      )}
                     </div>
                   );
 
@@ -219,7 +237,9 @@ export default function FormView() {
                         required={field.required}
                         className="w-full border border-[var(--lightblue)] bg-transparent text-white rounded p-2 outline-none"
                       />
-                      {!validity.ok && <p className="text-xs text-red-400 mt-1">{validity.msg}</p>}
+                      {!validity.ok && (
+                        <p className="text-xs text-red-400 mt-1">{validity.msg}</p>
+                      )}
                     </div>
                   );
 
@@ -229,7 +249,10 @@ export default function FormView() {
                       <p className="font-medium text-gray-200 mb-2">{key}</p>
                       <div className="flex flex-col gap-2">
                         {field.options?.map((opt, i) => (
-                          <label key={i} className="inline-flex items-center gap-2 text-gray-300">
+                          <label
+                            key={i}
+                            className="inline-flex items-center gap-2 text-gray-300"
+                          >
                             <input
                               type="radio"
                               name={key}
@@ -243,7 +266,9 @@ export default function FormView() {
                           </label>
                         ))}
                       </div>
-                      {!validity.ok && <p className="text-xs text-red-400 mt-1">{validity.msg}</p>}
+                      {!validity.ok && (
+                        <p className="text-xs text-red-400 mt-1">{validity.msg}</p>
+                      )}
                     </div>
                   );
 
@@ -255,16 +280,22 @@ export default function FormView() {
                         {[1, 2, 3, 4, 5].map((star) => (
                           <span
                             key={star}
-                            onClick={() => setRatings((prev) => ({ ...prev, [globalIndex]: star }))}
+                            onClick={() =>
+                              setRatings((prev) => ({ ...prev, [globalIndex]: star }))
+                            }
                             className={`cursor-pointer text-2xl ${
-                              ratings[globalIndex] >= star ? "text-yellow-400" : "text-gray-600"
+                              ratings[globalIndex] >= star
+                                ? "text-yellow-400"
+                                : "text-gray-600"
                             }`}
                           >
                             ★
                           </span>
                         ))}
                       </div>
-                      {!validity.ok && <p className="text-xs text-red-400 mt-1">{validity.msg}</p>}
+                      {!validity.ok && (
+                        <p className="text-xs text-red-400 mt-1">{validity.msg}</p>
+                      )}
                     </div>
                   );
 
@@ -277,67 +308,82 @@ export default function FormView() {
               }
             })}
 
-            {totalFields > PAGE_SIZE ? (
-              <div className="flex items-center justify-between mt-2">
-                <button
-                  type="button"
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  disabled={page <= 0}
-                  className={`px-3 py-1 rounded ${
-                    page <= 0 ? "opacity-50 cursor-not-allowed bg-gray-700" : "bg-[var(--blue)] hover:bg-[var(--lightblue)]"
-                  }`}
-                >
-                  Previous
-                </button>
+           {totalFields > PAGE_SIZE ? (
+  <div className="flex items-center justify-between mt-2">
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        setPage((p) => Math.max(0, p - 1));
+      }}
+      disabled={page <= 0}
+      className={`px-3 py-1 rounded ${
+        page <= 0
+          ? "opacity-50 cursor-not-allowed bg-gray-700"
+          : "bg-[var(--blue)] hover:bg-[var(--lightblue)]"
+      }`}
+    >
+      Previous
+    </button>
 
-                <div>
-                  {page < pageCount - 1 ? (
-                    <button
-                      type="button"
-                      onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
-                      className="px-3 py-1 rounded bg-[var(--blue)] hover:bg-[var(--lightblue)]"
-                    >
-                      Next
-                    </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className={`px-4 py-2 rounded font-semibold ${
-                        isSubmitting ? "opacity-60 cursor-not-allowed bg-gray-600" : "bg-[var(--blue)] hover:bg-[var(--lightblue)]"
-                      }`}
-                    >
-                      {isSubmitting ? "Submitting..." : "Submit"}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <button
-                type="submit"
-                disabled={!formValid || isSubmitting}
-                className={`w-full rounded px-4 py-2 font-semibold transition ${
-                  !formValid || isSubmitting ? "opacity-60 cursor-not-allowed bg-gray-600" : "bg-[var(--blue)] hover:bg-[var(--lightblue)]"
-                }`}
-              >
-                {isSubmitting ? "Submitting..." : "Submit"}
-              </button>
-            )}
+    <div>
+      {page < pageCount - 1 ? (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            setPage((p) => Math.min(pageCount - 1, p + 1));
+          }}
+          className="px-3 py-1 rounded bg-[var(--blue)] hover:bg-[var(--lightblue)]"
+        >
+          Next
+        </button>
+      ) : (
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className={`px-4 py-2 rounded font-semibold ${
+            isSubmitting
+              ? "opacity-60 cursor-not-allowed bg-gray-600"
+              : "bg-[var(--blue)] hover:bg-[var(--lightblue)]"
+          }`}
+        >
+          {isSubmitting ? "Submitting..." : "Submit"}
+        </button>
+      )}
+    </div>
+  </div>
+) : (
+  <button
+    type="submit"
+    disabled={!formValid || isSubmitting}
+    className={`w-full rounded px-4 py-2 font-semibold transition ${
+      !formValid || isSubmitting
+        ? "opacity-60 cursor-not-allowed bg-gray-600"
+        : "bg-[var(--blue)] hover:bg-[var(--lightblue)]"
+    }`}
+  >
+    {isSubmitting ? "Submitting..." : "Submit"}
+  </button>
+)}
 
             {error && <p className="text-center text-red-400 font-medium mt-4">{error}</p>}
           </form>
         ) : (
-          <div className="text-center">
+          <div className="text-center space-y-4">
             {successMsg ? (
               <p className="text-green-400 font-medium">{successMsg}</p>
-            ) : (
+            ) : error ? (
               <p className="text-red-400 font-medium">{error}</p>
+            ) : (
+              <p className="text-gray-400">Thanks for your response!</p>
             )}
             <button
               onClick={() => {
                 setError("");
                 setSuccessMsg("");
                 setShowForm(true);
+                startTimeRef.current = Date.now();
               }}
               className="mt-4 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
             >

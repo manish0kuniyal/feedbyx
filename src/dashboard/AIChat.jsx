@@ -71,7 +71,7 @@ export default function AIChat({ baseUrl, forms, darkMode }) {
         }`}
       >
         <div className="flex items-center gap-3">
-          <span className="font-semibold text-lg tracking-tight"> Form:</span>
+          <span className="font-bold text-lg tracking-tight">current form</span>
           <select
             value={selectedForm}
             onChange={handleFormChange}
@@ -83,7 +83,7 @@ export default function AIChat({ baseUrl, forms, darkMode }) {
           >
             {forms?.length ? (
               forms.map((f) => (
-                <option key={f.customId} value={f.customId}>
+                <option  key={f.customId} value={f.customId}>
                   {f.name || "Untitled Form"}
                 </option>
               ))

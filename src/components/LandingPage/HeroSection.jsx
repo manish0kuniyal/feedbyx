@@ -17,7 +17,7 @@ export default function HeroSection() {
 </h2>
 
 
-      <p className="text-gray-600 my-4 dark:text-gray-400 max-w-xl text-lg">
+      <p className="text-gray-600  my-4 dark:text-gray-400 max-w-xl text-lg">
         Create custom forms in minutes. Embed them anywhere, share with
         anyone, and track responses with powerful analytics and AI.
       </p>

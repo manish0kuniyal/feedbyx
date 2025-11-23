@@ -55,7 +55,54 @@ export default function LandingPage() {
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden text-center bg-gradient-to-b from-[#151a21] to-black text-white px-4">
-      <div className="absolute top-0 left-0 w-full h-full bg-line-pattern opacity-40 pointer-events-none z-0" />
+      <div
+        className="absolute inset-0 z-0 pointer-events-none"
+        style={{
+          backgroundImage: `
+            linear-gradient(to right, #e7e5e4b7 1px, transparent 1px),
+            linear-gradient(to bottom, #e7e5e4a4 1px, transparent 1px)
+          `,
+          backgroundSize: '200px 200px',
+          backgroundPosition: '0 0, 0 0',
+          maskImage: `
+            repeating-linear-gradient(
+              to right,
+              black 0px,
+              black 3px,
+              transparent 3px,
+              transparent 8px
+            ),
+            repeating-linear-gradient(
+              to bottom,
+              black 0px,
+              black 3px,
+              transparent 3px,
+              transparent 8px
+            ),
+            radial-gradient(ellipse 70% 70% at 50% 55%, #000 45%, transparent 90%)
+          `,
+          WebkitMaskImage: `
+            repeating-linear-gradient(
+              to right,
+              black 0px,
+              black 3px,
+              transparent 3px,
+              transparent 8px
+            ),
+            repeating-linear-gradient(
+              to bottom,
+              black 0px,
+              black 5px,
+              transparent 3px,
+              transparent 8px
+            ),
+            radial-gradient(ellipse 70% 70% at 50% 55%, #000 41%, transparent 80%)
+          `,
+          maskComposite: 'intersect',
+          WebkitMaskComposite: 'source-in',
+          opacity: 0.25,
+        }}
+      />
 
       <Navbar />
       <HeroSection />
@@ -64,56 +111,6 @@ export default function LandingPage() {
       <PricingSection />
       <FAQSection />
       <Footer />
-
-      <style jsx="true" global="true">{`
-        .bg-line-pattern {
-          background-image:
-            linear-gradient(to right, rgba(255, 255, 255, 0.18) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.18) 1px, transparent 1px);
-          background-size: 200px 200px;
-
-          mask-image:
-            linear-gradient(
-              to right,
-              rgba(255,255,255,0) 0%,
-              rgba(255, 255, 255, 1) 10%,
-              rgba(255,255,255,0.8) 40%,
-              rgba(255,255,255,1) 50%,
-              rgba(255,255,255,0.8) 60%,
-              rgba(255,255,255,0.1) 90%,
-              rgba(255,255,255,0) 100%
-            ),
-            linear-gradient(
-              to bottom,
-              rgba(255,255,255,0) 0%,        
-              rgba(255,255,255,0.2) 10%,    
-              rgba(255,255,255,1) 25%,      
-              rgba(255,255,255,1) 100%
-            );
-
-          -webkit-mask-image:
-            linear-gradient(
-              to right,
-              rgba(255,255,255,0) 0%,
-              rgba(255,255,255,0.1) 10%,
-              rgba(255,255,255,0.8) 40%,
-              rgba(255,255,255,1) 50%,
-              rgba(255,255,255,1) 60%,
-              rgba(255,255,255,0.1) 90%,
-              rgba(255,255,255,0) 100%
-            ),
-            linear-gradient(
-              to bottom,
-              rgba(255,255,255,0) 0%,
-              rgba(255, 255, 255, 0.59) 10%,
-              rgba(255,255,255,1) 25%,
-              rgba(255,255,255,1) 100%
-            );
-
-          mask-composite: intersect;
-          -webkit-mask-composite: destination-in;
-        }
-      `}</style>
     </div>
   );
 }

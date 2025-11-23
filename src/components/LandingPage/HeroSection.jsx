@@ -9,12 +9,18 @@ export default function HeroSection() {
       transition={{ duration: 0.8, ease: "easeOut" }}
       className="mt-[7vh] flex flex-col items-center text-center space-y-6 z-10 relative"
     >
-     <h2
+  <h2
   className="font-bold leading-[1.15] max-w-4xl text-[clamp(2.5rem,6vw,4.5rem)] sm:text-[clamp(2.8rem,5vw,5rem)] lg:text-[clamp(3rem,4vw,5.5rem)]"
 >
   The modern way to build{" "}
-  <span className="text-[var(--blue)]">AI-powered forms.</span>
+  <span
+  className="bg-gradient-to-r from-[var(--blue)] to-white bg-[length:300%_100%] bg-clip-text text-transparent"
+>
+  AI-powered forms.
+</span>
+
 </h2>
+
 
 
       <p className="text-gray-600  my-4 dark:text-gray-400 max-w-xl text-lg">

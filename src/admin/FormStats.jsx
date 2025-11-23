@@ -12,7 +12,6 @@ import { FaChrome, FaFirefox, FaEdge, FaSafari, FaWindows, FaApple, FaAndroid, F
 import { GrResources } from "react-icons/gr";
 import FeedbackMap from './FeedbackMap'; // adjust path if needed
 
-// small country code map (unchanged)
 const countryNameToCode = {
   India: "IN",
   "United States": "US",

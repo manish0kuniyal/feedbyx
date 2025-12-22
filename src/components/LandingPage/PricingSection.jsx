@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 const plans = [
   {
     name: "Free",
-    price: "$0/mo",
+    price: "₹0/mo",
     features: [
       "Create up to 2 forms",
       "30 responses per form",
@@ -15,7 +15,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "$19/mo",
+    price: "₹49/mo",
     features: [
       "Create up to 4 forms",
       "100 responses per form",
@@ -73,10 +73,10 @@ export default function PricingSection() {
               whileInView={{ opacity: 1 }}
               transition={{ delay: idx * 0.15, duration: 0.8, ease: "easeOut" }}
               viewport={{ once: true }}
-              className={`relative border border-white/10 rounded-3xl backdrop-blur-2xl bg-gradient-to-b ${plan.color} p-10 flex flex-col items-center justify-between text-center overflow-hidden min-h-[420px] hover:bg-white/10 transition duration-300`}
+              className={`relative border border-white/10 rounded-3xl backdrop-blur-2xl bg-gradient-to-b ₹{plan.color} p-10 flex flex-col items-center justify-between text-center overflow-hidden min-h-[420px] hover:bg-white/10 transition duration-300`}
             >
               <div
-                className={`absolute -top-16 -right-16 w-72 h-72 ${plan.glow} blur-[130px] rounded-full pointer-events-none`}
+                className={`absolute -top-16 -right-16 w-72 h-72 ₹{plan.glow} blur-[130px] rounded-full pointer-events-none`}
               ></div>
 
               {plan.popular && (

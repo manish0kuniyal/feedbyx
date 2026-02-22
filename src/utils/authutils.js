@@ -12,6 +12,7 @@ export const useStoreUserFromSession = () => {
     if (session?.user) {
       const userFromSession = {
         name: session.user.name,
+        
         email: session.user.email,
         image: session.user.image,
         uid: session.user.id, // <- You need this if UID is injected via callback

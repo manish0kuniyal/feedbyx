@@ -106,7 +106,7 @@ export default function LandingPage() {
 
       <Navbar />
       <HeroSection />
-      <ShareAnywhere />
+{/*<ShareAnywhere />*/}
       <HowItWorks />
       <PricingSection />
       <FAQSection />

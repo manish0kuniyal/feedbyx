@@ -1,7 +1,10 @@
 
 import { motion } from "framer-motion";
-import GoogleSignInButton from "../GoogleSignInButton";
+import { useState } from "react";
+import AuthModal from "../AuthModal";
+import { HiSparkles } from "react-icons/hi2";
 export default function HeroSection() {
+  const [open, setOpen] = useState(false);
   return (
     <motion.main
       initial={{ opacity: 0, y: 50 }}
@@ -28,8 +31,13 @@ export default function HeroSection() {
         anyone, and track responses with powerful analytics and AI.
       </p>
 
-    <div className="flex flex-col sm:flex-row gap-4 mt-6">
-  <GoogleSignInButton label="Try for free" variant="primary" />
+    <div className="flex flex-col sm:flex-row gap-4 mt-6"><button
+  onClick={() => setOpen(true)}
+  className="flex items-center justify-center gap-2 px-8 py-4 rounded-lg border border-[var(--blue)] text-white font-semibold hover:bg-[var(--blue)] hover:text-white transition shadow-sm text-lg"
+>
+  <HiSparkles className="text-xl" />
+  <span>Start Building</span>
+</button>
 
   
   <a
@@ -41,6 +49,7 @@ export default function HeroSection() {
     Request Demo
   </a>
 </div>
+<AuthModal isOpen={open} onClose={() => setOpen(false)} />
     </motion.main>
   );
 }

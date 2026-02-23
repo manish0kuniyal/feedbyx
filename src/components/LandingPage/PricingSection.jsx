@@ -1,6 +1,5 @@
 "use client";
 import { motion } from "framer-motion";
-
 const plans = [
   {
     name: "Free",
@@ -9,6 +8,7 @@ const plans = [
       "Create up to 2 forms",
       "30 responses per form",
       "Basic analytics dashboard",
+      "Feedbyx branding",
     ],
     color: "from-blue-400/3 to-blue-500/1",
     glow: "bg-blue-400/10",
@@ -19,24 +19,13 @@ const plans = [
     features: [
       "Create up to 4 forms",
       "100 responses per form",
-      "AI chatbot (5 queries total)",
-      "Advanced insights & analytics",
+      "Advanced analytics & insights",
+      "Remove branding",
+      "Priority support",
     ],
     color: "from-purple-400/3 to-purple-500/1",
     glow: "bg-purple-400/10",
     popular: true,
-  },
-  {
-    name: "Enterprise",
-    price: "Contact Us",
-    features: [
-      "Unlimited forms & responses",
-      "Full AI access without limits",
-      "Team collaboration & API access",
-      "Dedicated success manager",
-    ],
-    color: "from-green-400/3 to-green-500/1",
-    glow: "bg-green-400/10",
   },
 ];
 
@@ -65,7 +54,7 @@ export default function PricingSection() {
           <span className="text-[var(--blue)] font-semibold">feedbyx</span>.
         </motion.p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-4xl mx-auto">
           {plans.map((plan, idx) => (
             <motion.div
               key={idx}

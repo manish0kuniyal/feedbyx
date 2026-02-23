@@ -1,7 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { FaChartBar, FaCode, FaWpforms } from "react-icons/fa";
-import { FaWandMagicSparkles } from "react-icons/fa6";
+import { MdPriceCheck } from "react-icons/md";
 
 export default function HowItWorks() {
   const getDirection = (direction) => {
@@ -102,14 +102,14 @@ export default function HowItWorks() {
     >
       <div className="relative z-10 mb-4">
         <div className="w-16 h-16 flex items-center justify-center rounded-2xl bg-white/4 shadow-inner">
-          <FaWandMagicSparkles className="w-8 h-8 text-purple-300" />
+          <MdPriceCheck  className="w-8 h-8 text-purple-300" />
         </div>
       </div>
       <div className="relative z-10">
-        <h3 className="font-semibold text-lg mb-2">Ask AI for Insights</h3>
-        <p className="text-sm text-gray-300 leading-relaxed max-w-sm mx-auto">
-          Go beyond charts — ask AI questions about your responses and uncover insights instantly.
-        </p>
+       <h3 className="font-semibold text-lg mb-2">Simple Monthly Pricing</h3>
+<p className="text-sm text-gray-300 leading-relaxed max-w-sm mx-auto">
+  No contracts. No hidden fees. Just pay for the month you use and cancel anytime.
+</p>
       </div>
     </motion.div>
   </div>

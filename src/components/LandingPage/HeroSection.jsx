@@ -15,11 +15,11 @@ export default function HeroSection() {
   <h2
   className="font-bold leading-[1.15] max-w-4xl text-[clamp(2.5rem,6vw,4.5rem)] sm:text-[clamp(2.8rem,5vw,5rem)] lg:text-[clamp(3rem,4vw,5.5rem)]"
 >
-  The modern way to build{" "}
+  Turn simple forms into{" "}
   <span
   className="bg-gradient-to-r from-[var(--blue)] to-white bg-[length:300%_100%] bg-clip-text text-transparent"
 >
-  AI-powered forms.
+  powerful insights.
 </span>
 
 </h2>
@@ -28,7 +28,7 @@ export default function HeroSection() {
 
       <p className="text-gray-600  my-4 dark:text-gray-400 max-w-xl text-lg">
         Create custom forms in minutes. Embed them anywhere, share with
-        anyone, and track responses with powerful analytics and AI.
+        anyone, and track responses with powerful analytics.
       </p>
 
     <div className="flex flex-col sm:flex-row gap-4 mt-6"><button
@@ -40,14 +40,14 @@ export default function HeroSection() {
 </button>
 
   
-  <a
-    href="https://calendly.com/manishkuniyal24/30min"
-    target="_blank"
-    rel="noopener noreferrer"
-    className="px-6 py-3 rounded-md bg-gray-200 dark:bg-gray-800 font-medium hover:bg-gray-300 dark:hover:bg-gray-700 transition"
-  >
-    Request Demo
-  </a>
+ <a
+  href="https://calendly.com/manishkuniyal24/30min"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="flex items-center justify-center px-6 py-3 rounded-lg bg-[var(--blue)] hover:bg-gray-800 hover:text-[var(--blue)] text-bold text-white font-semibold transition hover:opacity-90"
+>
+  Request Demo
+</a>
 </div>
 <AuthModal isOpen={open} onClose={() => setOpen(false)} />
     </motion.main>

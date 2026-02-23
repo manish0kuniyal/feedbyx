@@ -7,16 +7,20 @@ export default function Modal({ embedForm, setEmbedForm, darkMode }) {
     if (embedForm) {
       console.log("✅ name:", embedForm.name);
       console.log('[Modal] embedForm:', embedForm, "ok");
-    } else {
-      console.log('[Modal] embedForm is null');
     }
   }, [embedForm]);
 
   if (!embedForm) return null;
 
+  const APP_URL = window.location.origin;
+
+  const embedCode = `
+<div id="feedback-widget-container"></div>
+<script src="${APP_URL}/embed.js" data-form-id="${embedForm?.customId}"></script>
+`;
+
   const handleCopy = () => {
-    const code = `<script src="https://feedbackapp2-7r27.onrender.com/embed.js" data-form-id="${embedForm?.customId}"></script>`;
-    navigator.clipboard.writeText(code);
+    navigator.clipboard.writeText(embedCode.trim());
     alert('✅ Embed code copied to clipboard!');
   };
 
@@ -54,10 +58,7 @@ export default function Modal({ embedForm, setEmbedForm, darkMode }) {
                   : 'bg-gray-50 text-gray-800 border-gray-200'
               }`}
             >
-{`
-<div id="feedback-widget-container"></div>
-<script src="https://feedbackapp2.vercel.app/embed.js" data-form-id="${embedForm?.customId}"></script>
-`}
+{embedCode}
             </pre>
 
             <div className="flex justify-end mt-6 gap-3">

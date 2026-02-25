@@ -38,7 +38,7 @@ export default function HowItWorks() {
           viewport={{ once: true }}
         >
           Supercharge your workflow with{" "}
-          <span className="text-[var(--blue)] font-bold">feedbyx</span> — the modern AI form builder.
+          <span className="text-[var(--blue)] font-bold">feedbyx</span> — the modern form builder.
         </motion.p>
 
         <div className="grid gap-8">

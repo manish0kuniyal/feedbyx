@@ -33,7 +33,7 @@ export default function HeroSection() {
 
     <div className="flex flex-col sm:flex-row gap-4 mt-6"><button
   onClick={() => setOpen(true)}
-  className="flex items-center justify-center gap-2 px-8 py-4 rounded-lg border border-[var(--blue)] text-white font-semibold hover:bg-[var(--blue)] hover:text-white transition shadow-sm text-lg"
+  className="flex items-center justify-center gap-2 px-8 py-4 rounded-lg border  text-white font-semibold hover:bg-[var(--blue)] hover:text-white transition shadow-sm text-lg"
 >
   <HiSparkles className="text-xl" />
   <span>Start Building</span>

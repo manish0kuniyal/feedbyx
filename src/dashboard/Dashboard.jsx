@@ -15,7 +15,7 @@ import { useThemeStore } from "../utils/themestore";
 import ShareLinkModal from "./ShareLinkModal";
 import FeedbackCards from "../admin/FeedbackCards";
 import Loader from "../components/Loading";
-import { fetchUser, logoutUser } from "../utils/api/auth";
+import { fetchUser, logoutUser, fetchUserPlan } from "../utils/api/auth";
 import { fetchForms } from "../utils/api/form";
 import { fetchFeedbacks } from "../utils/api/feedback";
 
@@ -25,6 +25,7 @@ export default function Dashboard() {
   const router = useNavigate();
   const darkMode = useThemeStore((s) => s.darkMode);
   const toggleDarkMode = useThemeStore((s) => s.toggleDarkMode);
+
   const [loadingAuth, setLoadingAuth] = useState(true);
   const [loadingForms, setLoadingForms] = useState(false);
   const [loadingResponses, setLoadingResponses] = useState(false);
@@ -34,6 +35,8 @@ export default function Dashboard() {
   const [shareForm, setShareForm] = useState(null);
   const [view, setView] = useState("admin");
   const [groupedFeedbacks, setGroupedFeedbacks] = useState({});
+  const [plan, setPlan] = useState(null);
+
   const baseUrl = import.meta.env.VITE_BASE_URL;
 
   useEffect(() => {
@@ -54,6 +57,19 @@ export default function Dashboard() {
     };
     loadUser();
   }, []);
+
+  /* -------- LOAD USER PLAN -------- */
+
+  useEffect(() => {
+    const loadPlan = async () => {
+      if (!user?.userId) return;
+
+      const data = await fetchUserPlan(user.userId);
+      setPlan(data);
+    };
+
+    loadPlan();
+  }, [user?.userId]);
 
   useEffect(() => {
     const loadForms = async () => {
@@ -178,6 +194,22 @@ export default function Dashboard() {
                 })}
               </div>
             </div>
+
+            {/* PLAN BUTTON */}
+            {plan?.name === "Free" && (
+              <button
+                onClick={() => router("/pricing")}
+                className="mb-3 px-3 py-2 rounded text-sm font-bold bg-[var(--lightblue)] text-black"
+              >
+                Upgrade to Pro
+              </button>
+            )}
+
+            {plan?.name === "Pro" && (
+              <div className="mb-3 px-3 py-2 text-sm font-bold text-center opacity-80">
+                Pro Plan
+              </div>
+            )}
 
             <div className="flex flex-col gap-3 mt-6">
               {bottomButtons.map((btn, idx) => (

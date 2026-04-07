@@ -66,3 +66,17 @@ export async function logoutUser() {
     credentials: "include",
   });
 }
+export async function fetchUserPlan(uid) {
+  try {
+    const res = await fetch(`${BASE_URL}api/users/plan?uid=${uid}`, {
+      credentials: "include",
+    });
+
+    if (!res.ok) return null;
+
+    return await res.json();
+  } catch (err) {
+    console.error("Plan fetch failed:", err);
+    return null;
+  }
+}
